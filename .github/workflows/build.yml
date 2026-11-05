@@ -1,0 +1,35 @@
+name: Build Web Export
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.3
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Export Web build
+        run: |
+          godot --headless --export-release "Web" build/web/index.html
+
+      - name: Upload web build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: build/web/
+          retention-days: 7
+
+      - name: Deploy to itch.io
+        if: success()
+        run: |
+          butler push build/web Meshtool/godot-starter-3d:web
+        env:
+          BUTLER_CREDENTIALS: ${{ secrets.BUTLER_CREDENTIALS }}
