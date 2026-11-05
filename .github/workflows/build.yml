@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Refresh repos.json (fail-safe: keeps committed snapshot on error)
+      - name: Refresh repos.json, keep snapshot on error
         run: python3 tools/fetch_repos.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
