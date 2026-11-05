@@ -16,6 +16,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install Web export templates
+        run: |
+          mkdir -p /github/home/.local/share/godot/export_templates/4.3.stable
+          cd /tmp
+          wget -q https://github.com/godotengine/godot/releases/download/4.3-stable/web_export_templates.zip -O web_export_templates.zip
+          unzip -o web_export_templates.zip -d /github/home/.local/share/godot/export_templates/4.3.stable/
+          ls -la /github/home/.local/share/godot/export_templates/4.3.stable/
+
       - name: Export Web build
         run: |
           godot --headless --export-release "Web" build/web/index.html
