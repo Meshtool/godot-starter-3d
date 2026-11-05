@@ -28,6 +28,7 @@ jobs:
 
       - name: Export Web build
         run: |
+          mkdir -p build/web
           godot --headless --export-release "Web" build/web/index.html
 
       - name: Upload web build artifact
