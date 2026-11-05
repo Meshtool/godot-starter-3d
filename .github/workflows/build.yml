@@ -28,8 +28,9 @@ jobs:
 
       - name: Export Web build
         run: |
+          apt-get update && apt-get install -y xvfb
           mkdir -p build/web
-          godot --headless --verbose --path . --export-release "Web" build/web/index.html
+          xvfb-run -a godot --headless --verbose --path . --export-release "Web" build/web/index.html
 
       - name: Upload web build artifact
         uses: actions/upload-artifact@v4
