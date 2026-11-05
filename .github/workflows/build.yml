@@ -19,11 +19,16 @@ jobs:
       - name: Install Web export templates
         run: |
           apt-get update && apt-get install -y curl unzip
-          mkdir -p /github/home/.local/share/godot/export_templates/4.3.stable
+          for DIR in "/github/home/.local/share/godot" "$HOME/.local/share/godot" "/root/.local/share/godot"; do
+            mkdir -p "$DIR/export_templates/4.3.stable"
+          done
           cd /tmp
           curl -fL -o export_templates.tpz https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz
           unzip -o export_templates.tpz -d /tmp/templates
           find /tmp/templates \( -name "web_debug.zip" -o -name "web_release.zip" -o -name "web_nothreads_debug.zip" -o -name "web_nothreads_release.zip" \) -exec cp {} /github/home/.local/share/godot/export_templates/4.3.stable/ \;
+          find /tmp/templates \( -name "web_debug.zip" -o -name "web_release.zip" -o -name "web_nothreads_debug.zip" -o -name "web_nothreads_release.zip" \) -exec cp {} "$HOME/.local/share/godot/export_templates/4.3.stable/" \;
+          find /tmp/templates \( -name "web_debug.zip" -o -name "web_release.zip" -o -name "web_nothreads_debug.zip" -o -name "web_nothreads_release.zip" \) -exec cp {} /root/.local/share/godot/export_templates/4.3.stable/ \;
+          ls -la /github/home/.local/share/godot/export_templates/4.3.stable/
           ls -la /github/home/.local/share/godot/export_templates/4.3.stable/
 
       - name: Export Web build
