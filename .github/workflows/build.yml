@@ -21,7 +21,7 @@ jobs:
           apt-get update && apt-get install -y curl unzip
           mkdir -p /github/home/.local/share/godot/export_templates/4.3.stable
           cd /tmp
-          curl -fL -o web_export_templates.zip https://downloads.tuxfamily.org/godotengine/4.3/stable/Godot_v4.3-stable_web_export_templates.zip
+          curl -fL -o web_export_templates.zip https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_web_export_templates.zip
           unzip -o web_export_templates.zip -d /github/home/.local/share/godot/export_templates/4.3.stable/
           ls -la /github/home/.local/share/godot/export_templates/4.3.stable/
 
