@@ -20,7 +20,7 @@ jobs:
         run: |
           mkdir -p /github/home/.local/share/godot/export_templates/4.3.stable
           cd /tmp
-          wget -q https://github.com/godotengine/godot/releases/download/4.3-stable/web_export_templates.zip -O web_export_templates.zip
+          wget -q https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_web_export_templates.zip -O web_export_templates.zip
           unzip -o web_export_templates.zip -d /github/home/.local/share/godot/export_templates/4.3.stable/
           ls -la /github/home/.local/share/godot/export_templates/4.3.stable/
 
