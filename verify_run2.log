@@ -1,0 +1,95 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+WARNING: Parent path './Main' for node 'World' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './World' for node 'Floor' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './Floor' for node 'CollisionShape3D' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './Floor' for node 'MeshInstance3D' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './World' for node 'Player' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './Player' for node 'CollisionShape3D' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './Player' for node 'MeshInstance3D' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './Player' for node 'Camera3D' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './Main' for node 'CanvasLayer' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './CanvasLayer' for node 'ScoreLabel' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './CanvasLayer' for node 'WinLabel' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './World' for node 'Coin1' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './Coin1' for node 'CollisionShape3D' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './Coin1' for node 'MeshInstance3D' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './World' for node 'Coin2' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './Coin2' for node 'CollisionShape3D' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './Coin2' for node 'MeshInstance3D' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './World' for node 'Coin3' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './Coin3' for node 'CollisionShape3D' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './Coin3' for node 'MeshInstance3D' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+ERROR: Node not found: "World/Player" (relative to "/root/Main").
+   at: get_node (scene/main/node.cpp:1975)
+   GDScript backtrace (most recent call first):
+       [0] @implicit_ready (res://main.gd:7)
+ERROR: Node not found: "CanvasLayer/ScoreLabel" (relative to "/root/Main").
+   at: get_node (scene/main/node.cpp:1975)
+   GDScript backtrace (most recent call first):
+       [0] @implicit_ready (res://main.gd:8)
+ERROR: Node not found: "CanvasLayer/WinLabel" (relative to "/root/Main").
+   at: get_node (scene/main/node.cpp:1975)
+   GDScript backtrace (most recent call first):
+       [0] @implicit_ready (res://main.gd:9)
+ERROR: Node not found: "World/Coin1" (relative to "/root/Main").
+   at: get_node (scene/main/node.cpp:1975)
+   GDScript backtrace (most recent call first):
+       [0] @implicit_ready (res://main.gd:10)
+ERROR: Node not found: "World/Coin2" (relative to "/root/Main").
+   at: get_node (scene/main/node.cpp:1975)
+   GDScript backtrace (most recent call first):
+       [0] @implicit_ready (res://main.gd:10)
+ERROR: Node not found: "World/Coin3" (relative to "/root/Main").
+   at: get_node (scene/main/node.cpp:1975)
+   GDScript backtrace (most recent call first):
+       [0] @implicit_ready (res://main.gd:10)
+=== Godot Starter 3D ready ===
+SCRIPT ERROR: Invalid access to property or key 'body_entered' on a base object of type 'null instance'.
+   at: _ready (res://main.gd:17)
+   GDScript backtrace (most recent call first):
+       [0] _ready (res://main.gd:17)
+SCRIPT ERROR: Invalid access to property or key 'velocity' on a base object of type 'null instance'.
+   at: _physics_process (res://main.gd:29)
+   GDScript backtrace (most recent call first):
+       [0] _physics_process (res://main.gd:29)
+SCRIPT ERROR: Invalid access to property or key 'velocity' on a base object of type 'null instance'.
+   at: _physics_process (res://main.gd:29)
+   GDScript backtrace (most recent call first):
+       [0] _physics_process (res://main.gd:29)
+SCRIPT ERROR: Attempt to call function 'rotate_y' in base 'null instance' on a null instance.
+   at: _process (res://main.gd:22)
+   GDScript backtrace (most recent call first):
+       [0] _process (res://main.gd:22)
+SCRIPT ERROR: Invalid access to property or key 'velocity' on a base object of type 'null instance'.
+   at: _physics_process (res://main.gd:29)
+   GDScript backtrace (most recent call first):
+       [0] _physics_process (res://main.gd:29)
+SCRIPT ERROR: Attempt to call function 'rotate_y' in base 'null instance' on a null instance.
+   at: _process (res://main.gd:22)
+   GDScript backtrace (most recent call first):
+       [0] _process (res://main.gd:22)
+SCRIPT ERROR: Attempt to call function 'rotate_y' in base 'null instance' on a null instance.
+   at: _process (res://main.gd:22)
+   GDScript backtrace (most recent call first):
+       [0] _process (res://main.gd:22)

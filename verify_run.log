@@ -1,0 +1,25 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+WARNING: Parent path './Floor' for node 'CollisionShape3D' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './Floor' for node 'MeshInstance3D' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './Player' for node 'CollisionShape3D' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './Player' for node 'MeshInstance3D' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './Player' for node 'Camera3D' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './Coin1' for node 'CollisionShape3D' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './Coin1' for node 'MeshInstance3D' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './Coin2' for node 'CollisionShape3D' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './Coin2' for node 'MeshInstance3D' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './Coin3' for node 'CollisionShape3D' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+WARNING: Parent path './Coin3' for node 'MeshInstance3D' has vanished when instantiating: 'res://main.tscn'.
+   at: instantiate (scene/resources/packed_scene.cpp:213)
+=== Godot Starter 3D ready ===

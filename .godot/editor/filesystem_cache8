@@ -1,0 +1,10 @@
+ea4bc82a6ad023ab7ee23ee620429895
+::res://::1793891444
+export_presets.cfg::TextFile::-1::1793889260::0::1::::<><>::
+export_test2.log::TextFile::-1::1793891396::0::1::::<><>::
+export_test3.log::TextFile::-1::1793891414::0::1::::<><>::
+export_test4.log::TextFile::-1::1793891445::0::1::::<><>::
+export_test.log::TextFile::-1::1793891272::0::1::::<><>::
+main.gd::GDScript::-1::1793888793::0::1::::<>Node3D<>::
+main.tscn::PackedScene::-1::1793888910::0::1::::<><>::res://main.gd
+preset_test.log::TextFile::-1::1793889265::0::1::::<><>::
