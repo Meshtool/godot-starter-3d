@@ -1,0 +1,20 @@
+{
+  "generated": "2026-11-05T14:40:00Z",
+  "repos": [
+    {"org":"Meshtool","name":"meshmarket-mcp","desc":"Connect any MCP client to the MeshTool platform + MeshMarket exchange in 30 seconds.","lang":"JavaScript","size":165,"issues":1,"stars":0,"pushed":"2026-10-29T10:05:47Z","archived":false,"url":"https://github.com/Meshtool/meshmarket-mcp"},
+    {"org":"Meshtool","name":"it-takes-skill","desc":"Skill OS: 40 composable, governed agent skills across four layers.","lang":"Python","size":259,"issues":0,"stars":0,"pushed":"2026-10-28T10:43:06Z","archived":false,"url":"https://github.com/Meshtool/it-takes-skill"},
+    {"org":"Meshtool","name":"meshtool-vm","desc":"Local VM where an agent finishes your loose ends, inside a sandbox you control.","lang":"JavaScript","size":88,"issues":2,"stars":0,"pushed":"2026-11-03T09:29:01Z","archived":false,"url":"https://github.com/Meshtool/meshtool-vm"},
+    {"org":"Meshtool","name":"meshtool-sdk","desc":"TypeScript SDK and CLI for the MeshTool API. Published as @meshtool/sdk.","lang":"TypeScript","size":47,"issues":0,"stars":0,"pushed":"2026-10-28T10:43:58Z","archived":false,"url":"https://github.com/Meshtool/meshtool-sdk"},
+    {"org":"Meshtool","name":"meshtool-skills","desc":"Public skill packs for the Meshtool estate.","lang":"Python","size":33,"issues":0,"stars":0,"pushed":"2026-10-29T11:31:08Z","archived":false,"url":"https://github.com/Meshtool/meshtool-skills"},
+    {"org":"Meshtool","name":"devdesk","desc":"Build cockpit over your repos and agents.","lang":"","size":6,"issues":0,"stars":0,"pushed":"2026-11-01T02:22:00Z","archived":false,"url":"https://github.com/Meshtool/devdesk"},
+    {"org":"Meshtool","name":"gate","desc":"One front door for agents into the brain.","lang":"","size":4,"issues":0,"stars":0,"pushed":"2026-11-01T02:23:20Z","archived":false,"url":"https://github.com/Meshtool/gate"},
+    {"org":"Meshtool","name":"mesh-seats","desc":"Per-agent memory and soul files.","lang":"","size":4,"issues":0,"stars":0,"pushed":"2026-11-01T02:24:40Z","archived":false,"url":"https://github.com/Meshtool/mesh-seats"},
+    {"org":"Meshtool","name":"examples","desc":"Copy-paste starters. One command each.","lang":"","size":4,"issues":0,"stars":0,"pushed":"2026-11-01T02:19:20Z","archived":false,"url":"https://github.com/Meshtool/examples"},
+    {"org":"Meshtool","name":".github","desc":"Meshtool org profile: README, laws, and front door.","lang":"","size":18,"issues":0,"stars":0,"pushed":"2026-11-04T05:44:59Z","archived":false,"url":"https://github.com/Meshtool/.github"},
+    {"org":"Meshtool","name":"godot-starter-3d","desc":"Mesh City: this game.","lang":"GDScript","size":10,"issues":0,"stars":0,"pushed":"2026-11-05T14:39:50Z","archived":false,"url":"https://github.com/Meshtool/godot-starter-3d"},
+    {"org":"RightOnPar-LLC","name":"creator-os-runtime","desc":"Control-plane runtime for creator-os: grants, vault, deploy, cog, ledger.","lang":"JavaScript","size":1445,"issues":5,"stars":0,"pushed":"2026-11-05T00:54:00Z","archived":false,"url":"https://github.com/RightOnPar-LLC/creator-os-runtime"},
+    {"org":"RightOnPar-LLC","name":"hideout","desc":"Finds where malware hides on a Windows PC, and follows the money after a scam.","lang":"Rust","size":618,"issues":0,"stars":0,"pushed":"2026-10-30T12:21:21Z","archived":false,"url":"https://github.com/RightOnPar-LLC/hideout"},
+    {"org":"RightOnPar-LLC","name":"edge-revenue-mcp","desc":"Offline-first edge payments MCP with a local append-only ledger.","lang":"Rust","size":49,"issues":0,"stars":0,"pushed":"2026-10-04T05:24:54Z","archived":true,"url":"https://github.com/RightOnPar-LLC/edge-revenue-mcp"},
+    {"org":"RightOnPar-LLC","name":".github","desc":"RightOnPar org profile.","lang":"","size":90,"issues":2,"stars":0,"pushed":"2026-10-24T13:21:09Z","archived":false,"url":"https://github.com/RightOnPar-LLC/.github"}
+  ]
+}

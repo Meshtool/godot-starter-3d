@@ -3,12 +3,31 @@ name: Build Web Export
 on:
   push:
     branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 13 * * *"   # daily refresh so the skyline tracks the repos
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
+  repo-data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refresh repos.json, keep snapshot on error
+        run: python3 tools/fetch_repos.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: repo-data
+          path: data/repos.json
+          retention-days: 1
+
   build:
+    needs: repo-data
     runs-on: ubuntu-latest
     container:
       image: barichello/godot-ci:4.3
@@ -16,26 +35,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Pull fresh repo data
+        uses: actions/download-artifact@v4
+        with:
+          name: repo-data
+          path: data
+
       - name: Install Web export templates
         run: |
           apt-get update && apt-get install -y curl unzip
-          for DIR in "/github/home/.local/share/godot" "$HOME/.local/share/godot" "/root/.local/share/godot"; do
-            mkdir -p "$DIR/export_templates/4.3.stable"
-          done
+          mkdir -p /github/home/.local/share/godot/export_templates/4.3.stable
           cd /tmp
           curl -fL -o export_templates.tpz https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz
           unzip -o export_templates.tpz -d /tmp/templates
-          find /tmp/templates \( -name "web_debug.zip" -o -name "web_release.zip" -o -name "web_nothreads_debug.zip" -o -name "web_nothreads_release.zip" \) -exec cp {} /github/home/.local/share/godot/export_templates/4.3.stable/ \;
-          find /tmp/templates \( -name "web_debug.zip" -o -name "web_release.zip" -o -name "web_nothreads_debug.zip" -o -name "web_nothreads_release.zip" \) -exec cp {} "$HOME/.local/share/godot/export_templates/4.3.stable/" \;
-          find /tmp/templates \( -name "web_debug.zip" -o -name "web_release.zip" -o -name "web_nothreads_debug.zip" -o -name "web_nothreads_release.zip" \) -exec cp {} /root/.local/share/godot/export_templates/4.3.stable/ \;
-          ls -la /github/home/.local/share/godot/export_templates/4.3.stable/
+          find /tmp/templates -name "web_*.zip" -exec cp {} /github/home/.local/share/godot/export_templates/4.3.stable/ \;
           ls -la /github/home/.local/share/godot/export_templates/4.3.stable/
 
       - name: Export Web build
         run: |
-          apt-get update && apt-get install -y xvfb
           mkdir -p build/web
-          xvfb-run -a godot --headless --verbose --path . --export-release "Web" build/web/index.html
+          godot --headless --export-release "Web" build/web/index.html
+          test -f build/web/index.html
 
       - name: Upload web build artifact
         uses: actions/upload-artifact@v4
@@ -45,8 +65,7 @@ jobs:
           retention-days: 7
 
       - name: Deploy to itch.io
-        if: success()
-        run: |
-          butler push build/web Meshtool/godot-starter-3d:web
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && env.BUTLER_CREDENTIALS != ''
+        run: butler push build/web meshtool/godot-starter-3d:web
         env:
           BUTLER_CREDENTIALS: ${{ secrets.BUTLER_CREDENTIALS }}
