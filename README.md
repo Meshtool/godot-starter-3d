@@ -6,7 +6,11 @@ A fever-dream drive down the repo strip. Every public Meshtool and RightOnPar re
 - **Glow**: how recently the repo was pushed. Hot means fresh.
 - **Orbs**: one per open issue/PR, plus one per repo. Grab them all to sync the estate.
 - **Fever**: climbs with every orb. The screen warps, the colors split, and the ink spreads.
-- **Cards**: walk up to a tower to read its card, then press **E** to open it on GitHub.
+- **Cards**: walk up to a tower to read its card (last commit, topics, open issues/PRs), then press **E** to open it on GitHub.
+- **Tickers**: every tower scrolls its own latest commit message toward the street.
+- **Roof**: painted in the repo's main language.
+- **Named orbs**: each open issue/PR is its own orb tagged `#n`; grab it and the dispatch reads you the title.
+- **You start inside this repo**: the game's own tower wears a crown, and you spawn at its door.
 
 Controls: WASD / arrows to move, SPACE to jump, E to open the repo.
 

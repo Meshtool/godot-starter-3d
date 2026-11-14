@@ -19,6 +19,13 @@ const GRAVITY := 24.0
 var player: CharacterBody3D
 var cam: Camera3D
 var towers: Array = []   # {node, repo, pos}
+var tickers: Array = []  # {label, text, off} — each tower scrolls its own last commit
+var ticker_clock := 0.0
+var self_repo := ""      # "org/name" of this game's own repo (from repos.json)
+var self_pos = null
+var data_generated := ""
+const HEART := Vector3(0, 16, 0)  # the runtime: every repo's receipts flow here
+var pulses: Array = []   # {node, from, to, t, speed}
 var orbs: Array = []     # Area3D
 var total_orbs := 0
 var collected := 0
@@ -30,6 +37,7 @@ var autopilot := "--demo" in OS.get_cmdline_user_args()
 var hud_title: Label
 var hud_count: Label
 var hud_time: Label
+var hud_data: Label
 var card: PanelContainer
 var card_title: Label
 var card_body: Label
@@ -50,6 +58,7 @@ func _ready() -> void:
 	_build_city(repos)
 	_build_player()
 	_build_hud()
+	hud_data.text = "%d repos live off GitHub · data %s" % [towers.size(), _ago(data_generated)]
 	print("=== Mesh City ready: %d towers, %d orbs ===" % [towers.size(), total_orbs])
 
 
@@ -73,13 +82,13 @@ func _setup_input() -> void:
 func _setup_environment() -> void:
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.06, 0.0, 0.05)  # desert night, bruised purple
+	env.background_color = Color(0.008, 0.0, 0.015)  # the void: almost nothing, a bruise of violet
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.12, 0.16, 0.2)
 	env.ambient_light_energy = 0.6
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.25, 0.04, 0.12)
-	env.fog_density = 0.018
+	env.fog_light_color = Color(0.06, 0.01, 0.07)
+	env.fog_density = 0.028  # the edge of the city dissolves instead of ending
 	env.glow_enabled = true
 	env.glow_intensity = 1.1
 	env.glow_bloom = 0.15
@@ -105,21 +114,32 @@ func _build_ground() -> void:
 	var box := BoxMesh.new()
 	box.size = shape.size
 	mesh.mesh = box
-	mesh.material_override = _mat(Color(0.28, 0.12, 0.06), Color.BLACK, 0.0, 0.0)  # baked desert hardpan
+	# the void: no floor, no grid — a still black ink sea that catches the light
+	var ink := _mat(Color(0.01, 0.005, 0.015), Color.BLACK, 0.0, 1.0)
+	ink.roughness = 0.08
+	mesh.material_override = ink
 	ground.add_child(mesh)
 	ground.position.y = -0.5
 	add_child(ground)
 
-	# grid lines: the mesh under the city
-	for i in range(-60, 61, 6):
-		for axis in 2:
-			var line := MeshInstance3D.new()
-			var lb := BoxMesh.new()
-			lb.size = Vector3(120, 0.02, 0.04) if axis == 0 else Vector3(0.04, 0.02, 120)
-			line.mesh = lb
-			line.position = Vector3(0, 0.01, i) if axis == 0 else Vector3(i, 0.01, 0)
-			line.material_override = _mat(ACID, ACID, 0.6, 0.0)
-			add_child(line)
+	# drifting dust of the void: pale specks hanging in nothing
+	var dust := CPUParticles3D.new()
+	dust.amount = 500
+	dust.lifetime = 30.0
+	dust.preprocess = 30.0
+	dust.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	dust.emission_box_extents = Vector3(80, 30, 80)
+	dust.position.y = 32
+	dust.gravity = Vector3(0, -0.02, 0)
+	dust.initial_velocity_min = 0.0
+	dust.initial_velocity_max = 0.15
+	dust.spread = 180.0
+	var dm := SphereMesh.new()
+	dm.radius = 0.04
+	dm.height = 0.08
+	dm.material = _mat(Color(0.8, 0.85, 1.0), Color(0.8, 0.85, 1.0), 2.0, 0.0)
+	dust.mesh = dm
+	add_child(dust)
 
 
 func _build_lava() -> void:
@@ -154,7 +174,27 @@ func _load_repos() -> Array:
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string(DATA_PATH))
 	if typeof(parsed) != TYPE_DICTIONARY:
 		return []
+	self_repo = parsed.get("self", "Meshtool/godot-starter-3d")
+	data_generated = parsed.get("generated", "")
 	return parsed.get("repos", [])
+
+
+func _ago(iso: String) -> String:
+	var d := _days_since(iso)
+	if d >= 999.0:
+		return "?"
+	if d < 1.0 / 24.0:
+		return "just now"
+	if d < 1.0:
+		return "%dh ago" % int(d * 24.0)
+	return "%dd ago" % int(d)
+
+
+const LANG_COLORS := {
+	"JavaScript": Color(0.95, 0.85, 0.2), "TypeScript": Color(0.2, 0.5, 0.95),
+	"Python": Color(0.25, 0.55, 0.85), "Rust": Color(0.85, 0.45, 0.25),
+	"GDScript": Color(0.35, 0.6, 0.75), "Go": Color(0.0, 0.68, 0.84),
+}
 
 
 func _days_since(iso: String) -> float:
@@ -185,6 +225,62 @@ func _build_city(repos: Array) -> void:
 			var pos := Vector3(cos(ang) * radius, 0, sin(ang) * radius)
 			_build_tower(list[i], pos, tint)
 		ring += 1
+	_build_heart()
+
+
+func _build_heart() -> void:
+	# the trust engine hangs over the city; every tower is threaded to it
+	var core := MeshInstance3D.new()
+	var sm := SphereMesh.new()
+	sm.radius = 1.4
+	sm.height = 2.8
+	core.mesh = sm
+	core.material_override = _mat(Color(1, 0.95, 0.85), GOLD, 5.0, 0.0)
+	core.position = HEART
+	add_child(core)
+	var hl := OmniLight3D.new()
+	hl.light_color = GOLD
+	hl.light_energy = 2.5
+	hl.omni_range = 26.0
+	hl.position = HEART
+	add_child(hl)
+	var heart_label := Label3D.new()
+	heart_label.text = "THE RUNTIME · every receipt ends up here"
+	heart_label.font_size = 52
+	heart_label.pixel_size = 0.01
+	heart_label.outline_size = 12
+	heart_label.modulate = GOLD
+	heart_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	heart_label.position = HEART + Vector3(0, 2.4, 0)
+	add_child(heart_label)
+	for tw in towers:
+		var top: Vector3 = tw.top
+		var heat: float = tw.heat
+		_filament(top, HEART, Color(tw.color, 0.25 + heat * 0.5), 0.2 + heat * 1.6)
+		# receipts: light runs from the repo up to the runtime — fresher repos send more, faster
+		for k in 1 + int(heat * 3.0):
+			var p := MeshInstance3D.new()
+			var pm := SphereMesh.new()
+			pm.radius = 0.12
+			pm.height = 0.24
+			p.mesh = pm
+			p.material_override = _mat(tw.color, tw.color, 6.0, 0.0)
+			add_child(p)
+			pulses.append({"node": p, "from": top, "to": HEART, "t": randf(), "speed": 0.08 + heat * 0.25})
+
+
+func _filament(a: Vector3, b: Vector3, color: Color, energy: float) -> void:
+	var f := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	var len := a.distance_to(b)
+	bm.size = Vector3(0.04, 0.04, len)
+	f.mesh = bm
+	var m := _mat(color, color, energy, 0.0)
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	f.material_override = m
+	add_child(f)
+	f.position = (a + b) * 0.5
+	f.look_at(b, Vector3.UP if absf((b - a).normalized().dot(Vector3.UP)) < 0.99 else Vector3.RIGHT)
 
 
 func _district_sign(org: String, radius: float, tint: Color, ring: int) -> void:
@@ -242,27 +338,74 @@ func _build_tower(repo: Dictionary, pos: Vector3, tint: Color) -> void:
 	beacon.position.y = height + 0.8
 	body.add_child(beacon)
 
+	var full := "%s/%s" % [repo.get("org", ""), repo.get("name", "")]
+	var is_self := full == self_repo
+
+	# the repo's name, big enough to read from the street
 	var label := Label3D.new()
 	label.text = repo.get("name", "?")
-	label.font_size = 48
-	label.outline_size = 10
-	label.modulate = color.lightened(0.3)
+	label.font_size = 72
+	label.pixel_size = 0.01
+	label.outline_size = 14
+	label.modulate = color.lightened(0.35)
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.position.y = height + 1.4
+	label.position.y = height + 1.6
 	body.add_child(label)
 
-	add_child(body)
-	towers.append({"node": body, "repo": repo, "pos": pos})
+	# language cap: the roof is painted in the repo's language
+	var lang: String = repo.get("lang", "")
+	if lang != "":
+		var cap := MeshInstance3D.new()
+		var cm := BoxMesh.new()
+		cm.size = Vector3(2.6, 0.25, 2.6)
+		cap.mesh = cm
+		cap.position.y = height + 0.12
+		var lc: Color = LANG_COLORS.get(lang, Color(0.8, 0.8, 0.85))
+		cap.material_override = _mat(lc, lc, 1.6, 0.0)
+		body.add_child(cap)
 
-	# orbs: one per open issue/PR, plus one for showing up
-	var n := int(repo.get("issues", 0)) + 1
+	# ticker: the tower scrolls its own last commit, facing the street
+	var msg: String = repo.get("commit", "")
+	if msg == "":
+		msg = repo.get("desc", "")
+	if msg != "":
+		var tk := Label3D.new()
+		tk.font_size = 52
+		tk.pixel_size = 0.01
+		tk.outline_size = 12
+		tk.modulate = Color(1, 0.95, 0.8)
+		tk.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+		var toward := -pos.normalized() if pos.length() > 0.1 else Vector3.FORWARD
+		tk.position = toward * 1.5 + Vector3(0, minf(height * 0.5, 3.0), 0)
+		body.add_child(tk)
+		tickers.append({"label": tk, "text": "   ▸ " + msg + "   ", "off": randi() % 20})
+
+	if is_self:  # this game is a repo too — and you're standing in it
+		var crown := Label3D.new()
+		crown.text = "★ YOU ARE IN THIS REPO ★"
+		crown.font_size = 48
+		crown.pixel_size = 0.01
+		crown.outline_size = 10
+		crown.modulate = GOLD
+		crown.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		crown.position.y = height + 2.6
+		body.add_child(crown)
+		self_pos = pos
+
+	add_child(body)
+	towers.append({"node": body, "repo": repo, "pos": pos, "top": pos + Vector3(0, height + 0.3, 0), "heat": heat, "color": color})
+
+	# orbs: one per open issue/PR (named, when the data has titles), plus one for showing up
+	var items: Array = repo.get("items", [])
+	var n := maxi(int(repo.get("issues", 0)), items.size()) + 1
 	for k in n:
 		var a := TAU * float(k) / float(n)
 		var opos := pos + Vector3(cos(a) * 3.0, 1.2 + (k % 3) * 0.9, sin(a) * 3.0)
-		_spawn_orb(opos, LAVA if k > 0 else GOLD)
+		var item = items[k - 1] if k > 0 and k - 1 < items.size() else null
+		_spawn_orb(opos, LAVA if k > 0 else GOLD, repo, item)
 
 
-func _spawn_orb(at: Vector3, color: Color) -> void:
+func _spawn_orb(at: Vector3, color: Color, repo: Dictionary, item) -> void:
 	var orb := Area3D.new()
 	orb.position = at
 	var col := CollisionShape3D.new()
@@ -277,6 +420,18 @@ func _spawn_orb(at: Vector3, color: Color) -> void:
 	m.mesh = sm
 	m.material_override = _mat(color, color, 4.0, 0.0)
 	orb.add_child(m)
+	orb.set_meta("repo", repo.get("name", "the strip"))
+	if item != null:
+		orb.set_meta("item", item)
+		var tag := Label3D.new()
+		tag.text = "%s#%d" % ["PR " if item.get("pr", false) else "", int(item.get("n", 0))]
+		tag.font_size = 28
+		tag.pixel_size = 0.01
+		tag.outline_size = 6
+		tag.modulate = color.lightened(0.4)
+		tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		tag.position.y = 0.6
+		orb.add_child(tag)
 	orb.set_meta("base_y", at.y)
 	orb.set_meta("phase", randf() * TAU)
 	orb.body_entered.connect(_on_orb.bind(orb))
@@ -324,6 +479,9 @@ func _build_player() -> void:
 	light.omni_range = 7.0
 	player.add_child(light)
 	add_child(player)
+	if self_pos != null:  # start at the door of this game's own repo
+		var sp: Vector3 = self_pos
+		player.position = sp + (-sp.normalized()) * 4.0 + Vector3(0, 1.5, 0)
 
 	cam = Camera3D.new()
 	cam.fov = 65
@@ -380,6 +538,17 @@ func _process(delta: float) -> void:
 		dispatch_timer -= delta
 		dispatch.modulate.a = clampf(dispatch_timer, 0.0, 1.0)
 
+	for pl in pulses:
+		pl.t = fmod(pl.t + delta * pl.speed, 1.0)
+		pl.node.position = pl.from.lerp(pl.to, pl.t)
+	ticker_clock += delta
+	if ticker_clock > 0.14:
+		ticker_clock = 0.0
+		for tk in tickers:
+			var txt: String = tk.text
+			tk.off = (tk.off + 1) % txt.length()
+			tk.label.text = (txt + txt).substr(tk.off, 24)
+
 	if not finished:
 		elapsed += delta
 	hud_time.text = "%.1fs" % elapsed
@@ -399,14 +568,13 @@ func _on_orb(body: Node, orb: Area3D) -> void:
 	orb.queue_free()
 	collected += 1
 	splats.splat(true)
-	var repo_name := "the strip"
-	var best_d := 1e9
-	for tw in towers:
-		var d: float = tw.pos.distance_to(orb.position)
-		if d < best_d:
-			best_d = d
-			repo_name = tw.repo.get("name", repo_name)
-	_say(DISPATCHES[randi() % DISPATCHES.size()].replace("{repo}", repo_name))
+	var repo_name: String = orb.get_meta("repo", "the strip")
+	if orb.has_meta("item"):
+		var it: Dictionary = orb.get_meta("item")
+		_say("Pocketed %s#%d off %s: \"%s\". It's still open out there. Somebody should close it." % [
+			"PR " if it.get("pr", false) else "issue ", int(it.get("n", 0)), repo_name, it.get("title", "")])
+	else:
+		_say(DISPATCHES[randi() % DISPATCHES.size()].replace("{repo}", repo_name))
 	if collected >= total_orbs and not finished:
 		finished = true
 		banner.text = "ESTATE SYNCED. THE FEVER BROKE.  %.1fs" % elapsed
@@ -429,6 +597,9 @@ func _build_hud() -> void:
 	hud_time = _label("", 20, Color(0.85, 0.85, 0.9))
 	hud_time.position = Vector2(20, 78)
 	ui.add_child(hud_time)
+	hud_data = _label("", 13, Color(0.7, 0.72, 0.78))
+	hud_data.position = Vector2(20, 104)
+	ui.add_child(hud_data)
 	var help := _label("WASD move · SPACE jump · E open repo", 14, Color(0.6, 0.65, 0.7))
 	help.anchor_top = 1.0
 	help.anchor_bottom = 1.0
@@ -499,7 +670,7 @@ func _build_hud() -> void:
 	fx.add_child(splats)
 	for i in 5:
 		splats.splat(false)  # the page is never clean
-	_say("Dispatch #1: Rolled onto the repo strip at dawn. The towers were humming. Something in the build pipeline was watching me.")
+	_say("Dispatch #1: Woke up inside my own repo. Rolled onto the strip at dawn. The towers were humming. Something in the build pipeline was watching me.")
 
 
 func _update_card() -> void:
@@ -520,7 +691,18 @@ func _update_card() -> void:
 	var lines := [best.get("desc", "")]
 	var lang: String = best.get("lang", "")
 	lines.append("%s  ·  last push %s" % [lang if lang != "" else "—", fresh])
+	var commit: String = best.get("commit", "")
+	if commit != "":
+		lines.append("last commit: \"%s\" (%s)" % [commit, _ago(best.get("commit_at", best.get("pushed", "")))])
+	var topics: Array = best.get("topics", [])
+	if not topics.is_empty():
+		lines.append("#" + "  #".join(PackedStringArray(topics)))
 	lines.append("open issues/PRs: %d%s" % [int(best.get("issues", 0)), "   [archived]" if best.get("archived", false) else ""])
+	var items: Array = best.get("items", [])
+	for i in mini(items.size(), 3):
+		lines.append("  · %s#%d %s" % ["PR " if items[i].get("pr", false) else "", int(items[i].get("n", 0)), items[i].get("title", "")])
+	if "%s/%s" % [best.get("org", ""), best.get("name", "")] == self_repo:
+		lines.append("★ this is the game you're playing")
 	lines.append("[E] open on GitHub")
 	card_body.text = "\n".join(lines)
 	card.visible = true
