@@ -26,6 +26,22 @@ var self_pos = null
 var data_generated := ""
 const HEART := Vector3(0, 16, 0)  # the runtime: every repo's receipts flow here
 var pulses: Array = []   # {node, from, to, t, speed}
+
+# ---- the effort layer: who is building, and how hard ----
+const DESK_PATH := "res://data/desk.json"
+const BUILDER_COLORS := {
+	"Claude": Color(1.0, 0.55, 0.35), "Copilot": Color(0.7, 0.45, 1.0),
+	"Codex": Color(0.6, 1.0, 0.75), "dependabot": Color(0.45, 0.5, 0.55),
+	"github-actions": Color(0.45, 0.5, 0.55),
+}
+var moths: Array = []    # {node, path:[Vector3], seg, t, speed, wobble}
+var bricks: Array = []   # {node, y, delay}
+var rings: Array = []    # {node, base, phase}
+var storms: Array = []   # {light, phase}
+var lanterns: Array = [] # {node, r, ang, h, speed, stale}
+var week := {"commits": 0, "merged": 0, "builders": {}}
+var desk := {}
+var hud_effort: Label
 var orbs: Array = []     # Area3D
 var total_orbs := 0
 var collected := 0
@@ -59,6 +75,12 @@ func _ready() -> void:
 	_build_player()
 	_build_hud()
 	hud_data.text = "%d repos live off GitHub · data %s" % [towers.size(), _ago(data_generated)]
+	if week.commits > 0 or not desk.is_empty():
+		var who := []
+		for b in week.builders:
+			who.append("%s %d" % [b, int(week.builders[b])])
+		hud_effort.text = "THIS WEEK  %d commits · %d PRs merged · builders: %s" % [
+			week.commits, week.merged, ", ".join(PackedStringArray(who)) if not who.is_empty() else "—"]
 	print("=== Mesh City ready: %d towers, %d orbs ===" % [towers.size(), total_orbs])
 
 
@@ -226,6 +248,234 @@ func _build_city(repos: Array) -> void:
 			_build_tower(list[i], pos, tint)
 		ring += 1
 	_build_heart()
+	_build_builders()
+	_build_desk()
+
+
+# ---------- effort layer ----------
+
+func _build_effort(repo: Dictionary, pos: Vector3, height: float) -> void:
+	var e: Dictionary = repo.get("effort", {})
+	if e.is_empty():
+		return
+	var commits := int(e.get("commits_7d", 0))
+	week.commits += commits
+	week.merged += int(e.get("prs_merged_7d", 0))
+	for b in e.get("builders", {}):
+		week.builders[b] = int(week.builders.get(b, 0)) + int(e.builders[b])
+
+	# bricks: this week's commits, laid on the roof one by one as you watch
+	var top := pos.y + height + 0.25
+	for i in mini(commits, 14):
+		var bk := MeshInstance3D.new()
+		var bm := BoxMesh.new()
+		bm.size = Vector3(1.9 - (i % 2) * 0.3, 0.32, 1.9 - ((i + 1) % 2) * 0.3)
+		bk.mesh = bm
+		var c := Color(1.0, 0.86, 0.5).lerp(LAVA, float(i) / 14.0)
+		bk.material_override = _mat(c, c, 1.4, 0.0)
+		var y := top + 0.2 + i * 0.36
+		bk.position = Vector3(pos.x, y + 14.0, pos.z)
+		bk.rotation.y = i * 0.25
+		add_child(bk)
+		bricks.append({"node": bk, "y": y, "delay": 1.2 + i * 0.35 + randf() * 0.4})
+
+	# scaffold rings: one per open PR, climbing the tower while the work is unmerged
+	for k in mini(int(e.get("prs_open", 0)), 4):
+		var ring := MeshInstance3D.new()
+		var tm := TorusMesh.new()
+		tm.inner_radius = 1.85
+		tm.outer_radius = 1.98
+		ring.mesh = tm
+		ring.material_override = _mat(TURQ, TURQ, 2.2, 0.0)
+		ring.position = pos
+		add_child(ring)
+		rings.append({"node": ring, "base": pos, "h": height, "phase": k * 1.7})
+
+	# CI weather: green = a calm gold halo, red = a storm that won't stop flickering
+	var ci: String = e.get("ci", "")
+	if ci == "success":
+		var halo := MeshInstance3D.new()
+		var hm := TorusMesh.new()
+		hm.inner_radius = 0.9
+		hm.outer_radius = 1.0
+		halo.mesh = hm
+		halo.material_override = _mat(GOLD, GOLD, 3.0, 0.0)
+		halo.position = Vector3(pos.x, top + 0.6 + mini(commits, 14) * 0.36 + 0.6, pos.z)
+		add_child(halo)
+		rings.append({"node": halo, "base": null, "phase": 0.0})
+	elif ci == "failure":
+		var storm := OmniLight3D.new()
+		storm.light_color = Color(1, 0.15, 0.2)
+		storm.omni_range = 7.0
+		storm.position = Vector3(pos.x, top + 2.0, pos.z)
+		add_child(storm)
+		storms.append({"light": storm, "phase": randf() * 10.0})
+		var tag := Label3D.new()
+		tag.text = "✖ CI RED"
+		tag.font_size = 40
+		tag.pixel_size = 0.01
+		tag.outline_size = 10
+		tag.modulate = Color(1, 0.3, 0.3)
+		tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		tag.position = Vector3(pos.x, top + 3.0, pos.z)
+		add_child(tag)
+
+
+func _builder_color(b: String) -> Color:
+	if BUILDER_COLORS.has(b):
+		return BUILDER_COLORS[b]
+	return TURQ  # people are turquoise, like your own orb
+
+
+func _build_builders() -> void:
+	# each builder is a swarm of ink moths flying the circuit of the towers they touched this week
+	for b in week.builders:
+		var path: Array = []
+		for tw in towers:
+			var e: Dictionary = tw.repo.get("effort", {})
+			if e.get("builders", {}).has(b):
+				path.append(tw.top + Vector3(0, 1.5, 0))
+		if path.is_empty():
+			continue
+		if path.size() == 1:  # one tower: circle it
+			var c: Vector3 = path[0]
+			path = [c + Vector3(2.5, 0, 0), c + Vector3(0, 1, 2.5), c + Vector3(-2.5, 0, 0), c + Vector3(0, -0.5, -2.5)]
+		var col := _builder_color(b)
+		var n := clampi(1 + int(week.builders[b]) / 3, 1, 7)
+		for i in n:
+			var m := Node3D.new()
+			var body := MeshInstance3D.new()
+			var sm := SphereMesh.new()
+			sm.radius = 0.14
+			sm.height = 0.28
+			body.mesh = sm
+			body.material_override = _mat(col, col, 5.0, 0.0)
+			m.add_child(body)
+			for side in [-1.0, 1.0]:  # wings: two thin ink blades
+				var w := MeshInstance3D.new()
+				var wm := BoxMesh.new()
+				wm.size = Vector3(0.5, 0.02, 0.22)
+				w.mesh = wm
+				w.position.x = side * 0.3
+				w.material_override = _mat(col.darkened(0.3), col, 1.2, 0.0)
+				w.set_meta("side", side)
+				m.add_child(w)
+			var trail := CPUParticles3D.new()
+			trail.amount = 24
+			trail.lifetime = 0.9
+			trail.local_coords = false
+			trail.gravity = Vector3(0, -0.3, 0)
+			trail.initial_velocity_max = 0.1
+			var tmm := SphereMesh.new()
+			tmm.radius = 0.04
+			tmm.height = 0.08
+			tmm.material = _mat(col, col, 3.0, 0.0)
+			trail.mesh = tmm
+			m.add_child(trail)
+			if i == 0:
+				var nm := Label3D.new()
+				nm.text = "%s · %d" % [b, int(week.builders[b])]
+				nm.font_size = 36
+				nm.pixel_size = 0.01
+				nm.outline_size = 8
+				nm.modulate = col
+				nm.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+				nm.position.y = 0.55
+				m.add_child(nm)
+			add_child(m)
+			moths.append({"node": m, "path": path, "seg": i % path.size(), "t": randf(),
+				"speed": 0.25 + randf() * 0.2, "wobble": randf() * TAU})
+
+
+func _build_desk() -> void:
+	# DevDesk's queue as lanterns orbiting the runtime: shape only, never the words
+	if not FileAccess.file_exists(DESK_PATH):
+		return
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(DESK_PATH))
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return
+	desk = parsed
+	var items: Array = desk.get("items", [])
+	for i in items.size():
+		var it: Dictionary = items[i]
+		var claimed: bool = it.get("state", "") == "claimed"
+		var stale := float(it.get("age_h", 0)) > 48.0
+		var col := GOLD if claimed else (Color(1, 0.2, 0.15) if stale else Color(0.7, 0.55, 1.0))
+		var ln := MeshInstance3D.new()
+		var lm := BoxMesh.new()
+		lm.size = Vector3(0.28, 0.42, 0.28) * (1.6 if claimed else 1.0)
+		ln.mesh = lm
+		ln.material_override = _mat(col, col, 4.0 if claimed else (1.4 if stale else 2.4), 0.0)
+		add_child(ln)
+		lanterns.append({"node": ln, "r": 4.0 + (i % 5) * 1.3, "ang": TAU * float(i) / float(maxi(items.size(), 1)),
+			"h": HEART.y - 2.5 + (i % 7) * 0.8, "speed": 0.05 + (0.25 if claimed else 0.0) + randf() * 0.04,
+			"stale": stale})
+		if claimed:
+			var who := Label3D.new()
+			who.text = "%s is on it" % it.get("agent", "an agent")
+			who.font_size = 30
+			who.pixel_size = 0.01
+			who.outline_size = 8
+			who.modulate = GOLD
+			who.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			who.position.y = 0.6
+			ln.add_child(who)
+	var desk_sign := Label3D.new()
+	desk_sign.text = "DEVDESK · %d on the desk · %d being worked · %d waiting 2+ days" % [
+		int(desk.get("open", 0)), int(desk.get("claimed", 0)), int(desk.get("stale_48h", 0))]
+	desk_sign.font_size = 40
+	desk_sign.pixel_size = 0.01
+	desk_sign.outline_size = 10
+	desk_sign.modulate = Color(0.8, 0.7, 1.0)
+	desk_sign.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	desk_sign.position = HEART + Vector3(0, -5.2, 0)
+	add_child(desk_sign)
+
+
+func _animate_effort(delta: float, t: float) -> void:
+	for bk in bricks:
+		if bk.delay > 0.0:
+			bk.delay -= delta
+			continue
+		var n: MeshInstance3D = bk.node
+		n.position.y = lerpf(n.position.y, bk.y, clampf(delta * 6.0, 0.0, 1.0))
+	for r in rings:
+		var n: MeshInstance3D = r.node
+		if r.base == null:
+			n.rotate_y(delta * 1.2)
+			continue
+		var base: Vector3 = r.base
+		n.position = base + Vector3(0, (0.5 + 0.5 * sin(t * 0.6 + r.phase)) * r.h, 0)
+		n.rotation.z = sin(t * 0.8 + r.phase) * 0.12
+	for st in storms:
+		var l: OmniLight3D = st.light
+		var flick := sin(t * 23.0 + st.phase) * sin(t * 7.0 + st.phase * 2.0)
+		l.light_energy = 0.4 + (3.5 if flick > 0.7 else 0.0)
+	for m in moths:
+		var path: Array = m.path
+		m.t += delta * m.speed
+		if m.t >= 1.0:
+			m.t -= 1.0
+			m.seg = (m.seg + 1) % path.size()
+		var a: Vector3 = path[m.seg]
+		var b: Vector3 = path[(m.seg + 1) % path.size()]
+		var mid := (a + b) * 0.5 + Vector3(0, 3.0, 0)  # arc between towers
+		var u: float = m.t
+		var p := a.lerp(mid, u).lerp(mid.lerp(b, u), u)
+		p += Vector3(sin(t * 3.0 + m.wobble), cos(t * 2.3 + m.wobble) * 0.6, cos(t * 2.7 + m.wobble)) * 0.35
+		var node: Node3D = m.node
+		if node.position.distance_to(p) > 0.01 and absf((p - node.position).normalized().y) < 0.98:
+			node.look_at(p, Vector3.UP)
+		node.position = p
+		for w in node.get_children():
+			if w.has_meta("side"):
+				w.rotation.z = w.get_meta("side") * sin(t * 26.0 + m.wobble) * 0.9
+	for ln in lanterns:
+		ln.ang += delta * ln.speed
+		var n: MeshInstance3D = ln.node
+		n.position = HEART + Vector3(cos(ln.ang) * ln.r, ln.h - HEART.y + sin(t + ln.ang) * 0.3, sin(ln.ang) * ln.r)
+		if ln.stale:
+			n.visible = fmod(t * 1.3 + ln.ang, 2.0) > 0.25
 
 
 func _build_heart() -> void:
@@ -394,6 +644,7 @@ func _build_tower(repo: Dictionary, pos: Vector3, tint: Color) -> void:
 
 	add_child(body)
 	towers.append({"node": body, "repo": repo, "pos": pos, "top": pos + Vector3(0, height + 0.3, 0), "heat": heat, "color": color})
+	_build_effort(repo, pos, height)
 
 	# orbs: one per open issue/PR (named, when the data has titles), plus one for showing up
 	var items: Array = repo.get("items", [])
@@ -538,6 +789,7 @@ func _process(delta: float) -> void:
 		dispatch_timer -= delta
 		dispatch.modulate.a = clampf(dispatch_timer, 0.0, 1.0)
 
+	_animate_effort(delta, t)
 	for pl in pulses:
 		pl.t = fmod(pl.t + delta * pl.speed, 1.0)
 		pl.node.position = pl.from.lerp(pl.to, pl.t)
@@ -600,6 +852,9 @@ func _build_hud() -> void:
 	hud_data = _label("", 13, Color(0.7, 0.72, 0.78))
 	hud_data.position = Vector2(20, 104)
 	ui.add_child(hud_data)
+	hud_effort = _label("", 14, Color(1.0, 0.8, 0.55))
+	hud_effort.position = Vector2(20, 124)
+	ui.add_child(hud_effort)
 	var help := _label("WASD move · SPACE jump · E open repo", 14, Color(0.6, 0.65, 0.7))
 	help.anchor_top = 1.0
 	help.anchor_bottom = 1.0
@@ -694,6 +949,14 @@ func _update_card() -> void:
 	var commit: String = best.get("commit", "")
 	if commit != "":
 		lines.append("last commit: \"%s\" (%s)" % [commit, _ago(best.get("commit_at", best.get("pushed", "")))])
+	var ef: Dictionary = best.get("effort", {})
+	if not ef.is_empty():
+		var bl := []
+		for b in ef.get("builders", {}):
+			bl.append("%s %d" % [b, int(ef.builders[b])])
+		lines.append("this week: %d commits%s · %d PRs merged · CI %s" % [
+			int(ef.get("commits_7d", 0)), (" (" + ", ".join(PackedStringArray(bl)) + ")") if not bl.is_empty() else "",
+			int(ef.get("prs_merged_7d", 0)), {"success": "✓", "failure": "✖ red"}.get(ef.get("ci", ""), "—")])
 	var topics: Array = best.get("topics", [])
 	if not topics.is_empty():
 		lines.append("#" + "  #".join(PackedStringArray(topics)))

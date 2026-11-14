@@ -17,13 +17,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Refresh repos.json, keep snapshot on error
-        run: python3 tools/fetch_repos.py
+        run: python3 tools/fetch_repos.py && python3 tools/fetch_desk.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEVDESK_EFFORT_URL: ${{ vars.DEVDESK_EFFORT_URL }}
       - uses: actions/upload-artifact@v4
         with:
           name: repo-data
-          path: data/repos.json
+          path: |
+            data/repos.json
+            data/desk.json
           retention-days: 1
 
   build:
