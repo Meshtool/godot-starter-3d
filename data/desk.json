@@ -1,0 +1,262 @@
+{
+ "generated": "2026-11-14T09:00:00Z",
+ "open": 50,
+ "claimed": 1,
+ "stale_48h": 20,
+ "done_7d": 0,
+ "agents": {
+  "Claude": 1
+ },
+ "items": [
+  {
+   "state": "claimed",
+   "age_h": 0.1,
+   "agent": "Claude"
+  },
+  {
+   "state": "open",
+   "age_h": 0.8,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 1.1,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 5.3,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 5.2,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 6.8,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 7.6,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 7.9,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 8.8,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 9.1,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 10.0,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 10.0,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 11.3,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 10.8,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 8.9,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 22.5,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 22.9,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 23.8,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 8.8,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 26.4,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 26.4,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 10.9,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 26.4,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 25.6,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 28.5,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 29.6,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 10.9,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 45.3,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 24.2,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 28.8,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 53.8,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 56.3,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 56.6,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 58.5,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 65.3,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 73.5,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 74.0,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 74.2,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 75.7,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 75.8,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 83.6,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 83.9,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 84.0,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 84.0,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 84.0,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 84.1,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 92.0,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 95.4,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 96.6,
+   "agent": ""
+  },
+  {
+   "state": "open",
+   "age_h": 97.3,
+   "agent": ""
+  }
+ ]
+}
