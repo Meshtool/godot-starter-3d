@@ -1,6 +1,6 @@
-# Mesh City: Gonzo Run
+# Mesh City: Proof Run
 
-A fever-dream drive down the repo strip. Every public Meshtool and RightOnPar repo is a neon tower.
+**Every run, proven.** A drive down the repo strip where every public Meshtool and RightOnPar repo is a neon tower, and every run is headed for a signed receipt anyone can check, whether a human or an AI agent played it (Proof of Play).
 
 - **Tower height**: repo size.
 - **Glow**: how recently the repo was pushed. Hot means fresh.
@@ -22,4 +22,4 @@ On `main`, the web build ships to itch.io via butler. That step needs the `BUTLE
 ## Dev
 `godot --path . -- --demo` runs attract mode: an autopilot drives to every orb, which serves as a smoke test of the full run.
 
-Art and writing are original, made in an ink-splatter, gonzo-journalism spirit.
+Art and writing are original.
