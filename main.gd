@@ -1,5 +1,5 @@
 extends Node3D
-## MESH CITY · GONZO RUN — a fever-dream drive down the repo strip.
+## MESH CITY · PROOF RUN — every run, proven. A drive down the repo strip.
 ## Ink splatter, acid neon, and a fever that climbs with every orb.
 ## Each public repo is a tower: height = size, glow = how recently it was pushed,
 ## orbs = open issues/PRs (+1 per repo). Collect every orb to sync the estate.
@@ -840,7 +840,7 @@ func _build_hud() -> void:
 	var ui := CanvasLayer.new()
 	add_child(ui)
 
-	hud_title = _label("MESH CITY · GONZO RUN", 28, GOLD)
+	hud_title = _label("MESH CITY · PROOF RUN", 28, GOLD)
 	hud_title.position = Vector2(20, 14)
 	ui.add_child(hud_title)
 	hud_count = _label("", 20, TURQ)
