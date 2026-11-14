@@ -24,6 +24,8 @@ var ticker_clock := 0.0
 var self_repo := ""      # "org/name" of this game's own repo (from repos.json)
 var self_pos = null
 var data_generated := ""
+const HEART := Vector3(0, 16, 0)  # the runtime: every repo's receipts flow here
+var pulses: Array = []   # {node, from, to, t, speed}
 var orbs: Array = []     # Area3D
 var total_orbs := 0
 var collected := 0
@@ -80,13 +82,13 @@ func _setup_input() -> void:
 func _setup_environment() -> void:
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.06, 0.0, 0.05)  # desert night, bruised purple
+	env.background_color = Color(0.008, 0.0, 0.015)  # the void: almost nothing, a bruise of violet
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.12, 0.16, 0.2)
 	env.ambient_light_energy = 0.6
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.25, 0.04, 0.12)
-	env.fog_density = 0.018
+	env.fog_light_color = Color(0.06, 0.01, 0.07)
+	env.fog_density = 0.028  # the edge of the city dissolves instead of ending
 	env.glow_enabled = true
 	env.glow_intensity = 1.1
 	env.glow_bloom = 0.15
@@ -112,21 +114,32 @@ func _build_ground() -> void:
 	var box := BoxMesh.new()
 	box.size = shape.size
 	mesh.mesh = box
-	mesh.material_override = _mat(Color(0.28, 0.12, 0.06), Color.BLACK, 0.0, 0.0)  # baked desert hardpan
+	# the void: no floor, no grid — a still black ink sea that catches the light
+	var ink := _mat(Color(0.01, 0.005, 0.015), Color.BLACK, 0.0, 1.0)
+	ink.roughness = 0.08
+	mesh.material_override = ink
 	ground.add_child(mesh)
 	ground.position.y = -0.5
 	add_child(ground)
 
-	# grid lines: the mesh under the city
-	for i in range(-60, 61, 6):
-		for axis in 2:
-			var line := MeshInstance3D.new()
-			var lb := BoxMesh.new()
-			lb.size = Vector3(120, 0.02, 0.04) if axis == 0 else Vector3(0.04, 0.02, 120)
-			line.mesh = lb
-			line.position = Vector3(0, 0.01, i) if axis == 0 else Vector3(i, 0.01, 0)
-			line.material_override = _mat(ACID, ACID, 0.6, 0.0)
-			add_child(line)
+	# drifting dust of the void: pale specks hanging in nothing
+	var dust := CPUParticles3D.new()
+	dust.amount = 500
+	dust.lifetime = 30.0
+	dust.preprocess = 30.0
+	dust.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	dust.emission_box_extents = Vector3(80, 30, 80)
+	dust.position.y = 32
+	dust.gravity = Vector3(0, -0.02, 0)
+	dust.initial_velocity_min = 0.0
+	dust.initial_velocity_max = 0.15
+	dust.spread = 180.0
+	var dm := SphereMesh.new()
+	dm.radius = 0.04
+	dm.height = 0.08
+	dm.material = _mat(Color(0.8, 0.85, 1.0), Color(0.8, 0.85, 1.0), 2.0, 0.0)
+	dust.mesh = dm
+	add_child(dust)
 
 
 func _build_lava() -> void:
@@ -212,6 +225,62 @@ func _build_city(repos: Array) -> void:
 			var pos := Vector3(cos(ang) * radius, 0, sin(ang) * radius)
 			_build_tower(list[i], pos, tint)
 		ring += 1
+	_build_heart()
+
+
+func _build_heart() -> void:
+	# the trust engine hangs over the city; every tower is threaded to it
+	var core := MeshInstance3D.new()
+	var sm := SphereMesh.new()
+	sm.radius = 1.4
+	sm.height = 2.8
+	core.mesh = sm
+	core.material_override = _mat(Color(1, 0.95, 0.85), GOLD, 5.0, 0.0)
+	core.position = HEART
+	add_child(core)
+	var hl := OmniLight3D.new()
+	hl.light_color = GOLD
+	hl.light_energy = 2.5
+	hl.omni_range = 26.0
+	hl.position = HEART
+	add_child(hl)
+	var heart_label := Label3D.new()
+	heart_label.text = "THE RUNTIME · every receipt ends up here"
+	heart_label.font_size = 52
+	heart_label.pixel_size = 0.01
+	heart_label.outline_size = 12
+	heart_label.modulate = GOLD
+	heart_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	heart_label.position = HEART + Vector3(0, 2.4, 0)
+	add_child(heart_label)
+	for tw in towers:
+		var top: Vector3 = tw.top
+		var heat: float = tw.heat
+		_filament(top, HEART, Color(tw.color, 0.25 + heat * 0.5), 0.2 + heat * 1.6)
+		# receipts: light runs from the repo up to the runtime — fresher repos send more, faster
+		for k in 1 + int(heat * 3.0):
+			var p := MeshInstance3D.new()
+			var pm := SphereMesh.new()
+			pm.radius = 0.12
+			pm.height = 0.24
+			p.mesh = pm
+			p.material_override = _mat(tw.color, tw.color, 6.0, 0.0)
+			add_child(p)
+			pulses.append({"node": p, "from": top, "to": HEART, "t": randf(), "speed": 0.08 + heat * 0.25})
+
+
+func _filament(a: Vector3, b: Vector3, color: Color, energy: float) -> void:
+	var f := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	var len := a.distance_to(b)
+	bm.size = Vector3(0.04, 0.04, len)
+	f.mesh = bm
+	var m := _mat(color, color, energy, 0.0)
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	f.material_override = m
+	add_child(f)
+	f.position = (a + b) * 0.5
+	f.look_at(b, Vector3.UP if absf((b - a).normalized().dot(Vector3.UP)) < 0.99 else Vector3.RIGHT)
 
 
 func _district_sign(org: String, radius: float, tint: Color, ring: int) -> void:
@@ -301,9 +370,9 @@ func _build_tower(repo: Dictionary, pos: Vector3, tint: Color) -> void:
 		msg = repo.get("desc", "")
 	if msg != "":
 		var tk := Label3D.new()
-		tk.font_size = 34
+		tk.font_size = 52
 		tk.pixel_size = 0.01
-		tk.outline_size = 8
+		tk.outline_size = 12
 		tk.modulate = Color(1, 0.95, 0.8)
 		tk.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
 		var toward := -pos.normalized() if pos.length() > 0.1 else Vector3.FORWARD
@@ -324,7 +393,7 @@ func _build_tower(repo: Dictionary, pos: Vector3, tint: Color) -> void:
 		self_pos = pos
 
 	add_child(body)
-	towers.append({"node": body, "repo": repo, "pos": pos})
+	towers.append({"node": body, "repo": repo, "pos": pos, "top": pos + Vector3(0, height + 0.3, 0), "heat": heat, "color": color})
 
 	# orbs: one per open issue/PR (named, when the data has titles), plus one for showing up
 	var items: Array = repo.get("items", [])
@@ -469,6 +538,9 @@ func _process(delta: float) -> void:
 		dispatch_timer -= delta
 		dispatch.modulate.a = clampf(dispatch_timer, 0.0, 1.0)
 
+	for pl in pulses:
+		pl.t = fmod(pl.t + delta * pl.speed, 1.0)
+		pl.node.position = pl.from.lerp(pl.to, pl.t)
 	ticker_clock += delta
 	if ticker_clock > 0.14:
 		ticker_clock = 0.0
