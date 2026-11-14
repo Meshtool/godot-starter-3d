@@ -10,7 +10,8 @@ Per repo it pulls what the game shows on the tower itself:
 Per-repo extras are best-effort: if one call fails, that repo just ships
 without them.
 """
-import json, os, sys, urllib.request
+import json, os, re, sys, urllib.request
+from datetime import datetime, timedelta, timezone
 
 ORGS = ["Meshtool", "RightOnPar-LLC"]
 OUT = os.path.join(os.path.dirname(__file__), "..", "data", "repos.json")
@@ -32,8 +33,50 @@ def first_line(s, n=90):
     return s[:n]
 
 
-def extras(full):
-    out = {"commit": "", "commit_at": "", "items": []}
+def who(c):
+    """Name the builder behind a commit: agents by their trailer or login, humans by login."""
+    msg = c["commit"].get("message", "")
+    login = (c.get("author") or {}).get("login") or c["commit"]["author"].get("name", "?")
+    low = (msg + " " + login).lower()
+    if re.search(r"co-authored-by:\s*claude", msg, re.I) or login.lower().startswith("claude"):
+        return "Claude"
+    if "copilot" in login.lower():
+        return "Copilot"
+    if "codex" in low:
+        return "Codex"
+    if login.endswith("[bot]"):
+        return login[:-5]
+    return login
+
+
+def effort(full, since):
+    e = {"commits_7d": 0, "builders": {}, "prs_open": 0, "prs_merged_7d": 0, "ci": ""}
+    try:
+        for c in get(f"https://api.github.com/repos/{full}/commits?since={since}&per_page=100"):
+            e["commits_7d"] += 1
+            b = who(c)
+            e["builders"][b] = e["builders"].get(b, 0) + 1
+    except Exception as ex:
+        print(f"::notice::{full}: no effort commits ({ex})")
+    try:
+        for pr in get(f"https://api.github.com/repos/{full}/pulls?state=all&sort=updated&direction=desc&per_page=50"):
+            if pr["state"] == "open":
+                e["prs_open"] += 1
+            elif pr.get("merged_at") and pr["merged_at"] >= since:
+                e["prs_merged_7d"] += 1
+    except Exception as ex:
+        print(f"::notice::{full}: no effort PRs ({ex})")
+    try:
+        runs = get(f"https://api.github.com/repos/{full}/actions/runs?per_page=1").get("workflow_runs", [])
+        if runs:
+            e["ci"] = runs[0].get("conclusion") or runs[0].get("status") or ""
+    except Exception as ex:
+        print(f"::notice::{full}: no CI ({ex})")
+    return e
+
+
+def extras(full, since):
+    out = {"commit": "", "commit_at": "", "items": [], "effort": effort(full, since)}
     try:
         c = get(f"https://api.github.com/repos/{full}/commits?per_page=1")
         if c:
@@ -54,6 +97,7 @@ def extras(full):
 
 def main():
     repos = []
+    since = (datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
     for org in ORGS:
         for r in get(f"https://api.github.com/orgs/{org}/repos?type=public&per_page=100"):
             if r.get("private"):
@@ -66,11 +110,10 @@ def main():
                 "url": r["html_url"], "topics": (r.get("topics") or [])[:5],
                 "homepage": r.get("homepage") or "",
             }
-            row.update(extras(r["full_name"]))
+            row.update(extras(r["full_name"], since))
             repos.append(row)
     if not repos:
         raise RuntimeError("no repos returned")
-    from datetime import datetime, timezone
     data = {"generated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "self": "Meshtool/godot-starter-3d", "repos": repos}
     with open(OUT, "w") as f:
