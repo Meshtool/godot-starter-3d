@@ -1,25 +1,19 @@
-# Mesh City: Gonzo Run
+# Mesh City
 
-A fever-dream drive down the repo strip. Every public Meshtool and RightOnPar repo is a neon tower.
+The Meshtool estate as a deep-sea field of seat orbs, in the same look as runtime.meshtool.ai and meshtool.ai.
 
-- **Tower height**: repo size.
-- **Glow**: how recently the repo was pushed. Hot means fresh.
-- **Orbs**: one per open issue/PR, plus one per repo. Grab them all to sync the estate.
-- **Fever**: climbs with every orb. The screen warps, the colors split, and the ink spreads.
-- **Cards**: walk up to a tower to read its card (last commit, topics, open issues/PRs), then press **E** to open it on GitHub.
-- **Tickers**: every tower scrolls its own latest commit message toward the street.
-- **Roof**: painted in the repo's main language.
-- **Named orbs**: each open issue/PR is its own orb tagged `#n`; grab it and the dispatch reads you the title.
-- **You start inside this repo**: the game's own tower wears a crown, and you spawn at its door.
+- **Every public repo is a particle orb.** Turquoise = Meshtool, gold = RightOnPar.
+- **Size** = repo size. **Brightness** = how fresh the last push is. **Swirl** = commits this week.
+- **The runtime** hangs in the middle, and every repo threads to it.
+- **You are your own seat orb.** Fly to a repo to dock and read its card: description, last commit, who built it this week (Claude, Codex, Copilot, people), CI, and open issues. Press **E** to open it on GitHub. Dock every repo to finish.
+- **DevDesk card**: the shape of the desk right now (how many items, how many being worked, how many waiting). Counts only, never titles.
 
-Controls: WASD / arrows to move, SPACE to jump, E to open the repo.
+Controls: WASD / arrows to fly, E to open the repo.
 
 ## How it stays live
-CI runs `tools/fetch_repos.py` before every export, and also daily on a schedule, so the skyline tracks the repos. Only public repos are included. If GitHub is unreachable, the build uses the committed `data/repos.json` snapshot.
+CI runs `tools/fetch_repos.py` (public repos, last commit, open items, 7-day effort) and `tools/fetch_desk.py` (DevDesk queue shape from `vars.DEVDESK_EFFORT_URL`) before every export, plus daily. On any error it keeps the committed snapshots in `data/`.
 
-On `main`, the web build ships to itch.io via butler. That step needs the `BUTLER_CREDENTIALS` repo secret and the itch page `meshtool/godot-starter-3d`, and it skips cleanly if the secret is missing.
+On `main`, the web build ships to itch.io via butler (`BUTLER_CREDENTIALS` secret, page `meshtool/godot-starter-3d`).
 
 ## Dev
-`godot --path . -- --demo` runs attract mode: an autopilot drives to every orb, which serves as a smoke test of the full run.
-
-Art and writing are original, made in an ink-splatter, gonzo-journalism spirit.
+`godot --path . -- --demo` runs attract mode: an autopilot docks at every repo, which serves as a smoke test.
