@@ -1,5 +1,5 @@
 import {spawnSync,execFileSync} from 'node:child_process';
-import {readFileSync,writeFileSync,mkdirSync,copyFileSync,readdirSync,statSync} from 'node:fs';
+import {readFileSync,writeFileSync,mkdirSync,copyFileSync,readdirSync,statSync,unlinkSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 const engine=process.argv[2]||'godot';const root='build/solo';
 if(execFileSync('git',['status','--porcelain'],{encoding:'utf8'}).trim())throw Error('Commit the reviewed source before packaging');
@@ -11,6 +11,7 @@ const smoke=run(engine,['--path','.','--rendering-method','gl_compatibility','--
 if(!smoke.includes('SOLO_SMOKE_PASS:')||/\bERROR:|SCRIPT ERROR:/.test(smoke))throw Error('Rendered smoke did not pass cleanly');
 const output=run(engine,['--headless','--path','.','--export-release','Web Portable',root+'/game/index.html'],'portable-export');
 if(/\bERROR:|SCRIPT ERROR:/.test(output))throw Error('Web export reported an error');
+for(const name of readdirSync(root+'/game'))if(name.endsWith('.import'))unlinkSync(root+'/game/'+name);
 copyFileSync('release/index.html',root+'/index.html');copyFileSync('assets/solo/solo-v1.png',root+'/solo-v1.png');
 const sha=p=>createHash('sha256').update(readFileSync(p)).digest('hex');
 const files={};for(const name of readdirSync(root+'/game'))if(statSync(root+'/game/'+name).isFile())files['game/'+name]={bytes:statSync(root+'/game/'+name).size,sha256:sha(root+'/game/'+name)};
