@@ -5,6 +5,7 @@ extends Node3D
 ## orbs = open issues/PRs (+1 per repo). Collect every orb to sync the estate.
 ## Walk up to a tower to read its card; press E to open the repo.
 
+const UI_FONT = preload("res://assets/fonts/InterVariable.ttf")
 const RELEASE_ID := "solo-v1-20261115"
 const SOLO_TEXTURE = preload("res://assets/solo/solo-v1.png")
 const DATA_PATH := "res://data/repos.json"
@@ -65,6 +66,7 @@ var banner: Label
 var dispatch: Label
 var dispatch_timer := 0.0
 var fever_mat: ShaderMaterial
+var fever_overlay: ColorRect
 var splats: SplatLayer
 var fever := 0.0
 
@@ -307,6 +309,7 @@ func _build_effort(repo: Dictionary, pos: Vector3, height: float) -> void:
 		add_child(storm)
 		storms.append({"light": storm, "phase": randf() * 10.0})
 		var tag := Label3D.new()
+		tag.font = UI_FONT
 		tag.text = "✖ CI RED"
 		tag.font_size = 40
 		tag.pixel_size = 0.01
@@ -370,6 +373,7 @@ func _build_builders() -> void:
 			m.add_child(trail)
 			if i == 0:
 				var nm := Label3D.new()
+				nm.font = UI_FONT
 				nm.text = "%s · %d" % [b, int(week.builders[b])]
 				nm.font_size = 36
 				nm.pixel_size = 0.01
@@ -408,6 +412,7 @@ func _build_desk() -> void:
 			"stale": stale})
 		if claimed:
 			var who := Label3D.new()
+			who.font = UI_FONT
 			who.text = "%s is on it" % it.get("agent", "an agent")
 			who.font_size = 30
 			who.pixel_size = 0.01
@@ -417,6 +422,7 @@ func _build_desk() -> void:
 			who.position.y = 0.6
 			ln.add_child(who)
 	var desk_sign := Label3D.new()
+	desk_sign.font = UI_FONT
 	desk_sign.text = "DEVDESK · %d on the desk · %d being worked · %d waiting 2+ days" % [
 		int(desk.get("open", 0)), int(desk.get("claimed", 0)), int(desk.get("stale_48h", 0))]
 	desk_sign.font_size = 40
@@ -492,6 +498,7 @@ func _build_heart() -> void:
 	hl.position = HEART
 	add_child(hl)
 	var heart_label := Label3D.new()
+	heart_label.font = UI_FONT
 	heart_label.text = "SIGNAL HUB / visualized repo activity"
 	heart_label.font_size = 52
 	heart_label.pixel_size = 0.01
@@ -532,6 +539,7 @@ func _filament(a: Vector3, b: Vector3, color: Color, energy: float) -> void:
 
 func _district_sign(org: String, radius: float, tint: Color, ring: int) -> void:
 	var l := Label3D.new()
+	l.font = UI_FONT
 	l.text = org.to_upper()
 	l.font_size = 160
 	l.modulate = Color(tint, 0.18)
@@ -590,6 +598,7 @@ func _build_tower(repo: Dictionary, pos: Vector3, tint: Color) -> void:
 
 	# the repo's name, big enough to read from the street
 	var label := Label3D.new()
+	label.font = UI_FONT
 	label.text = repo.get("name", "?")
 	label.font_size = 72
 	label.pixel_size = 0.01
@@ -617,6 +626,7 @@ func _build_tower(repo: Dictionary, pos: Vector3, tint: Color) -> void:
 		msg = repo.get("desc", "")
 	if msg != "":
 		var tk := Label3D.new()
+		tk.font = UI_FONT
 		tk.font_size = 52
 		tk.pixel_size = 0.01
 		tk.outline_size = 12
@@ -629,6 +639,7 @@ func _build_tower(repo: Dictionary, pos: Vector3, tint: Color) -> void:
 
 	if is_self:  # this game is a repo too — and you're standing in it
 		var crown := Label3D.new()
+		crown.font = UI_FONT
 		crown.text = "★ YOU ARE IN THIS REPO ★"
 		crown.font_size = 48
 		crown.pixel_size = 0.01
@@ -672,6 +683,7 @@ func _spawn_orb(at: Vector3, color: Color, repo: Dictionary, item) -> void:
 	if item != null:
 		orb.set_meta("item", item)
 		var tag := Label3D.new()
+		tag.font = UI_FONT
 		tag.text = "%s#%d" % ["PR " if item.get("pr", false) else "", int(item.get("n", 0))]
 		tag.font_size = 28
 		tag.pixel_size = 0.01
@@ -916,6 +928,8 @@ func _build_hud() -> void:
 	add_child(fx)
 	ui.layer = 1
 	var rect := ColorRect.new()
+	fever_overlay = rect
+	rect.visible = not calm_motion
 	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var sh := Shader.new()
@@ -933,7 +947,18 @@ func _build_hud() -> void:
 	motion_button.text = "Motion: calm [M]"
 	motion_button.position = Vector2(20, 150)
 	motion_button.pressed.connect(_toggle_motion)
+	motion_button.add_theme_font_override("font", UI_FONT)
 	ui.add_child(motion_button)
+	var course_button := Button.new()
+	course_button.name = "ProofCourseButton"
+	course_button.text = "Solo's Proof Course"
+	course_button.add_theme_font_override("font", UI_FONT)
+	course_button.position = Vector2(20, 192)
+	course_button.custom_minimum_size = Vector2(210, 40)
+	course_button.tooltip_text = "Leave this city run and open the recorded flight course."
+	course_button.pressed.connect(func():
+		get_tree().change_scene_to_file("res://proof_course.tscn"))
+	ui.add_child(course_button)
 	_say("SOLO, reporting from the repo strip. Collect the signals. Find the stories. Bring back receipts.")
 
 
@@ -985,6 +1010,7 @@ func _update_card() -> void:
 func _label(text: String, size: int, color: Color) -> Label:
 	var l := Label.new()
 	l.text = text
+	l.add_theme_font_override("font", UI_FONT)
 	l.add_theme_font_size_override("font_size", size)
 	l.add_theme_color_override("font_color", color)
 	l.add_theme_color_override("font_outline_color", Color.BLACK)
@@ -1121,6 +1147,7 @@ class SplatLayer extends Control:
 func _toggle_motion() -> void:
 	calm_motion = not calm_motion
 	splats.visible = not calm_motion
+	fever_overlay.visible = not calm_motion
 	motion_button.text = "Motion: calm [M]" if calm_motion else "Motion: gonzo [M]"
 
 
@@ -1144,10 +1171,10 @@ func _smoke_test() -> void:
 			_on_orb(player, orb)
 		if collected != total_orbs or not finished or not banner.visible:
 			errors.append("complete run did not reach completion")
-		if not calm_motion:
-			errors.append("calm motion must be the default")
+		if not calm_motion or fever_overlay.visible or splats.visible:
+			errors.append("calm motion must hide distortion and splats by default")
 		_toggle_motion()
-		if calm_motion or not splats.visible:
+		if calm_motion or not splats.visible or not fever_overlay.visible:
 			errors.append("motion toggle failed")
 		_toggle_motion()
 	if not errors.is_empty():

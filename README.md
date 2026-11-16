@@ -33,3 +33,37 @@ Only the committed public repo snapshot is included. The existing CI refreshes i
 ## Preserved from main
 
 Latest commit tickers, language-colored roofs, named issue/PR orbs, builder activity, commit bricks, PR rings and the aggregate DevDesk snapshot remain. The signal hub is a visualization of repo activity, not a live Runtime receipt stream. Calm motion suppresses the CI flashes and stale-queue blinking. Snapshot timestamps stay visible.
+
+## Solo's Proof Course (phase 2)
+
+The existing character, roadside city, delivery ledger and portable release stay
+in place. Choose **Solo's Proof Course** in the city for the recorded flight
+course; **Back to city** returns to the same game. The course preserves the
+ocean design from earlier work as a deliberate game mode, not a second project.
+
+In the course, use Start run, Watch demo, Pause, Replay last and Export run.
+Completed runs are replayed locally with deterministic 60 Hz integer movement.
+Changed builds, snapshots, inputs, result claims and malformed files are rejected.
+The UI says LOCAL REPLAY MATCH and Runtime signature NOT ISSUED. It authenticates
+neither a player nor a wall-clock speed record. Demo/human lanes are self-declared.
+Runtime issuance remains existing DevDesk #160/#177 work. No service submission,
+agent keys, paid calls, tokens or blockchain transactions are involved.
+
+Inter 4.1 and Godot's spark texture are bundled with licenses in THIRD_PARTY.md.
+The course uses bounded billboard particles; reduced effects is on by default.
+The existing city receives the same readable font and 2x antialiasing.
+Calm mode hides the distortion/grain shader as well as the ink splats; the
+original Gonzo effects remain available with M.
+
+Before committing gameplay or data edits, run `python3 tools/write_build_manifest.py`.
+Then run `godot --headless --script tests/run_model_test.gd`,
+`godot --headless --script tests/game_flow_test.gd`, and
+`python3 -m unittest discover -s tests -p 'test_*.py' -v`.
+Run `godot --headless --script tests/portal_flow_test.gd` for the city/course round trip.
+The existing city smoke and delivery tests remain separate checks.
+
+Run JSON is downloaded on Web or written to `user://mesh-city-run.json` natively.
+From the exact build checkout, verify with
+`godot --headless --script tools/verify_run.gd -- /path/to/run.json`.
+The sample Mesh Tag checker requires an independently trusted issuer key;
+`--allow-sample` explicitly permits the public demo key and labels the result SAMPLE.

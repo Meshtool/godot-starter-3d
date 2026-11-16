@@ -1,0 +1,14 @@
+Godot Engine v4.3.stable.official.77dcf97d8 - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:360)
+OpenGL API 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 19.1.7, 256 bits)
+
+=== SOLO ready: 15 studios, 25 orbs ===
+PASS: existing city exposes the proof course
+PASS: existing Solo character remains loaded
+=== Mesh City ready: 15 repos ===
+PASS: city opens the course in the same game
+PASS: leaving an active run asks before discarding it
+=== SOLO ready: 15 studios, 25 orbs ===
+PASS: course returns to the preserved city
+PORTAL FLOW: 5 checks, 0 failures

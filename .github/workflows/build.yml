@@ -16,6 +16,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify Mesh Tag trust boundary
+        run: |
+          python -m pip install -r requirements-dev.txt
+          python -m unittest discover -s tests -p 'test_*.py' -v
       - name: Refresh repos.json, keep snapshot on error
         run: python3 tools/fetch_repos.py && python3 tools/fetch_desk.py
         env:
@@ -53,6 +60,14 @@ jobs:
           unzip -o export_templates.tpz -d /tmp/templates
           find /tmp/templates -name "web_*.zip" -exec cp {} /github/home/.local/share/godot/export_templates/4.3.stable/ \;
           ls -la /github/home/.local/share/godot/export_templates/4.3.stable/
+
+      - name: Bind build and test replay
+        run: |
+          python3 tools/write_build_manifest.py
+          godot --headless --editor --quit
+          godot --headless --script tests/run_model_test.gd
+          godot --headless --script tests/game_flow_test.gd
+          godot --headless --script tests/portal_flow_test.gd
 
       - name: Export Web build
         run: |

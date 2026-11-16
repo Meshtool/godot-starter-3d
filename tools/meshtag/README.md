@@ -1,15 +1,29 @@
-# Mesh Tag v0 (prototype)
+# Mesh Tag prototype
 
-The printable, shareable proof of a run. Think golden ticket: one look and people know it's a Meshtool run.
+A printable 1800×900 sample ticket with an Ed25519 receipt in its PNG `meshtag`
+iTXt chunk. This remains a **SAMPLE**, signed with a public throwaway demo key.
+It is not issued from gameplay, and its QR links to these sample docs.
 
-- **What it is:** a 6×3 in ticket (1800×900 at 300 dpi) with the run's game, lane (human or AI agent), time, replay result, build, and a QR code to verify.
-- **What makes it last:** the full signed receipt (Ed25519) is stored inside the PNG (`meshtag` iTXt chunk). Anyone with the file and the public key can check it offline, with no account and without our servers.
-- **Tamper check:** change one number and verification fails.
-
+```sh
+python3 -m pip install -r requirements-dev.txt
+python3 tools/meshtag/make_tag.py
+python3 tools/meshtag/verify_tag.py tools/meshtag/mesh-tag-sample.png --allow-sample
 ```
-python3 tools/meshtag/make_tag.py      # writes mesh-tag-sample.png (demo key)
-python3 tools/meshtag/verify_tag.py tools/meshtag/mesh-tag-sample.png   # VALID
+
+Without `--allow-sample`, the sample is rejected. For a future real receipt,
+pass an issuer public key obtained from a trusted channel, never from the image:
+
+```sh
+python3 tools/meshtag/verify_tag.py run.png --trusted-key <64-hex-character-public-key>
 ```
 
-The sample uses a throwaway **demo key** and is labeled SAMPLE. Real tags are issued only by the runtime (DevDesk #160/#177) after its replay matches.
-The brand files it uses (`brand/avatar.png`) land in PR #6.
+The verifier checks the explicit trust anchor, algorithm, receipt content hash,
+signature and replay assertion. An attacker replacing the embedded key and
+re-signing cannot pass against the trusted key. The known demo key cannot sign
+a non-sample receipt. Invalid input exits 1. `SAMPLE_VALID` and
+`SIGNATURE_VALID` are distinct outcomes; neither validates the PNG pixels,
+real-world player identity, freshness, revocation, or a live Runtime endpoint.
+
+Real receipt issuance and its trusted public-key distribution remain the
+existing Runtime proof work (DevDesk #160/#177). No signing secret belongs in
+this repository, itch.io upload, or browser client.
