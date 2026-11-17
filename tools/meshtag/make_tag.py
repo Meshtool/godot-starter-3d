@@ -5,7 +5,9 @@ W,H=1800,900
 GOLD=(232,190,92); GOLD2=(255,224,140); TURQ=(38,222,205); CREAM=(243,238,226); GREY=(150,156,160)
 PB='/usr/share/fonts/truetype/google-fonts/Poppins-Bold.ttf'; PM='/usr/share/fonts/truetype/google-fonts/Poppins-Medium.ttf'
 IM='/usr/share/fonts/opentype/inter/Inter-Medium.otf'; IS='/usr/share/fonts/opentype/inter/Inter-SemiBold.otf'
-F=lambda p,s: ImageFont.truetype(p,s)
+def F(path, size):
+    fallback = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
+    return ImageFont.truetype(path if os.path.exists(path) else fallback, size)
 # --- the receipt (SAMPLE, demo key) ---
 receipt={"v":1,"kind":"game.run","tag":"MT-SAMPLE-0001","game":"Mesh City: Proof Run",
  "lane":"human","result":{"time_ms":161370,"orbs":42,"orbs_total":42},
@@ -40,7 +42,7 @@ d.rounded_rectangle([44,44,W-44,H-44],radius=28,outline=(120,96,44),width=2)
 sx=1330
 for py in range(70,H-60,22): d.ellipse([sx-4,py-4,sx+4,py+4],fill=(70,58,30))
 # orb emblem
-A=Image.open('os.path.join(os.path.dirname(__file__),'..','..','brand','avatar.png')').resize((300,300),Image.LANCZOS)
+A=Image.open(os.path.join(os.path.dirname(__file__),'..','..','brand','avatar.png')).resize((300,300),Image.LANCZOS)
 m=Image.new('L',A.size,0); ImageDraw.Draw(m).ellipse([22,22,278,278],fill=255); m=m.filter(ImageFilter.GaussianBlur(10))
 img.paste(A,(95,95),m); d=ImageDraw.Draw(img)
 # title
@@ -63,18 +65,18 @@ d.text((110,800),"SAMPLE TAG · demo key · not a real run",font=F(IS,24),fill=(
 d.text((1395,70),"TAG NO.",font=F(IS,24),fill=GREY)
 d.text((1395,100),"MT-0001",font=F(PB,56),fill=GOLD)
 q=qrcode.QRCode(border=1,box_size=10,error_correction=qrcode.constants.ERROR_CORRECT_M)
-q.add_data("https://runtime.meshtool.ai/verify?tag=MT-SAMPLE-0001"); q.make()
+q.add_data("https://github.com/Meshtool/godot-starter-3d/tree/meshtag-v0/tools/meshtag"); q.make()
 qi=q.make_image(fill_color=(8,9,11),back_color=GOLD2).convert('RGB').resize((340,340),Image.NEAREST)
 img.paste(qi,(1395,190))
 # check mark next to MATCH
 d.line([(792,632),(806,646),(832,614)],fill=GOLD2,width=6)
-d.text((1395,550),"SCAN TO VERIFY",font=F(IS,28),fill=CREAM)
-d.text((1395,595),"Works without an account.",font=F(IM,22),fill=GREY)
+d.text((1395,550),"SAMPLE DOCS",font=F(IS,28),fill=CREAM)
+d.text((1395,595),"Demo signature only.",font=F(IM,22),fill=GREY)
 d.text((1395,625),"The full signed receipt",font=F(IM,22),fill=GREY)
 d.text((1395,653),"lives inside this image.",font=F(IM,22),fill=GREY)
 d.text((1395,740),"meshtool.itch.io",font=F(PM,28),fill=TURQ)
 # embed
 meta=PngImagePlugin.PngInfo(); meta.add_itxt("meshtag",json.dumps(tagdoc),zip=True)
-meta.add_text("Software","Meshtool Mesh Tag v1"); meta.add_text("Comment","Signed run receipt. Verify: runtime.meshtool.ai/verify")
+meta.add_text("Software","Meshtool Mesh Tag v1"); meta.add_text("Comment","SAMPLE. Demo key only; not a Runtime-issued run.")
 img.save(os.path.join(os.path.dirname(__file__),'mesh-tag-sample.png'),pnginfo=meta,dpi=(300,300))
 print("saved", tagdoc["cid"][:20])

@@ -1,0 +1,37 @@
+Godot Engine v4.3.stable.official.77dcf97d8 - https://godotengine.org
+
+PASS: real inputs finish two checkpoints
+PASS: each checkpoint scored once in order
+PASS: fixed simulation time
+PASS: recorded run replays
+PASS: JSON export and restore replay identically
+PASS: wrong build rejected
+PASS: changed repo layout rejected
+PASS: changed time checksum rejected
+PASS: forged result with recomputed checksum rejected
+PASS: altered inputs cannot reproduce claimed finish
+PASS: post-finish input rejected
+PASS: incomplete run rejected
+PASS: invalid axis rejected: 2
+PASS: invalid axis rejected: -2
+PASS: invalid axis rejected: 0.5
+PASS: invalid axis rejected: 1
+PASS: invalid axis rejected: true
+PASS: invalid axis rejected: <null>
+PASS: invalid axis rejected: inf
+PASS: invalid axis rejected: nan
+PASS: malformed movement rejected
+PASS: oversized input log rejected before replay
+PASS: malformed root rejected
+PASS: malformed result rejected before hashing
+PASS: boolean result position rejected
+PASS: injected verification claim rejected
+PASS: local match never asserts runtime verification
+PASS: empty world cannot finish
+PASS: no scoring after finish
+PASS: diagonal speed is fixed
+PASS: world bounds enforced
+PASS: API order cannot change stable layout
+PASS: full repo snapshot is reachable
+PASS: full snapshot demo replays
+RUN MODEL: 34 checks, 0 failures

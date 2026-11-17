@@ -1,0 +1,14 @@
+✔ talk and drafts cannot publish (1.687302ms)
+✔ reserve once before sending, including after ambiguous failure (0.217284ms)
+✔ receipt replay is idempotent and conflicting receipts fail (0.353208ms)
+✔ new accounts and new releases get independent delivery keys (0.148131ms)
+✔ no receipt without reservation or HTTPS (0.196915ms)
+✔ file lock refuses concurrent writers and state persists (0.974096ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 106.348537

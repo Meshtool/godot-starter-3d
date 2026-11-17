@@ -1,0 +1,27 @@
+{
+  "schema": "solo.proof-course.review.v1",
+  "date": "2026-11-16T18:36:37.680275+00:00",
+  "base_main": "84f655c0bdec2f76be1539734932ec043b9611bf",
+  "build": "sha256:829a1fcccf193ef258d4d1385ce65e46cc76dd6b3e8cbb7d5478a8edf3f2df92",
+  "engine": "Godot 4.3 stable",
+  "checks": {
+    "model": 34,
+    "course_rendered": 18,
+    "portal_rendered": 5,
+    "mesh_tag": 10,
+    "delivery": 6,
+    "total": 73,
+    "city_smoke_scene_checks": 6
+  },
+  "demo": {
+    "lane": "demo",
+    "ticks": 1232,
+    "time_ms": 20533,
+    "repos": 15,
+    "runtime_signature": "not issued"
+  },
+  "web_export": "passed",
+  "web_browser_smoke": "not performed: browser runtime requires a Unix socket unavailable in this environment",
+  "published": false,
+  "artwork": "Existing Solo and city preserved; font and spark licenses in THIRD_PARTY.md"
+}
