@@ -3,14 +3,62 @@
     "releaseId": "solo-v1-20261115",
     "destination": "huggingface",
     "account": "Meshtool/talk-to-meshtool",
-    "status": "in_flight",
-    "startedAt": "2026-11-15T22:42:03.319Z"
+    "status": "needs_reconciliation",
+    "startedAt": "2026-11-15T22:42:03.319Z",
+    "reason": "Upload picker timed out; visible form still contains 0 files; requires file upload permission"
   },
   "[\"solo-v1-20261115\",\"itch\",\"Meshtool\"]": {
     "releaseId": "solo-v1-20261115",
     "destination": "itch",
     "account": "Meshtool",
-    "status": "in_flight",
-    "startedAt": "2026-11-15T22:42:03.611Z"
+    "status": "needs_reconciliation",
+    "startedAt": "2026-11-15T22:42:03.611Z",
+    "reason": "No upload attempted; shared browser file upload permission is unresolved"
+  },
+  "[\"solo-v1-20261115\",\"github\",\"Meshtool/godot-starter-3d\"]": {
+    "releaseId": "solo-v1-20261115",
+    "destination": "github",
+    "account": "Meshtool/godot-starter-3d",
+    "status": "published",
+    "startedAt": "2026-11-15T23:11:32.007Z",
+    "url": "https://github.com/Meshtool/godot-starter-3d/releases/tag/solo-v1-20261115",
+    "observedAt": "2026-11-15T23:13:45.517Z"
+  },
+  "[\"solo-v1-20261115\",\"huggingface-community\",\"Meshtool/talk-to-meshtool\"]": {
+    "releaseId": "solo-v1-20261115",
+    "destination": "huggingface-community",
+    "account": "Meshtool/talk-to-meshtool",
+    "status": "published",
+    "startedAt": "2026-11-15T23:13:45.767Z",
+    "reason": "Human CAPTCHA challenge is open; no discussion URL observed; reconcile before retry",
+    "url": "https://huggingface.co/spaces/Meshtool/talk-to-meshtool/discussions/1",
+    "observedAt": "2026-11-15T23:16:58.272Z"
+  },
+  "[\"solo-v1-20261115\",\"bluesky\",\"meshtool.bsky.social\"]": {
+    "releaseId": "solo-v1-20261115",
+    "destination": "bluesky",
+    "account": "meshtool.bsky.social",
+    "status": "published",
+    "startedAt": "2026-11-15T23:13:46.076Z",
+    "url": "https://bsky.app/profile/meshtool.bsky.social/post/3n2f5d5t75k2u",
+    "observedAt": "2026-11-15T23:15:25.904Z"
+  },
+  "[\"solo-v1-20261115\",\"x\",\"meshtoolai\"]": {
+    "releaseId": "solo-v1-20261115",
+    "destination": "x",
+    "account": "meshtoolai",
+    "status": "published",
+    "startedAt": "2026-11-15T23:15:57.411Z",
+    "url": "https://x.com/meshtoolai/status/2122106624341049408",
+    "observedAt": "2026-11-15T23:17:49.563Z"
+  },
+  "[\"solo-v1-20261115\",\"youtube\",\"UC2ugpj3d7gewM7h4rjXDRAw\"]": {
+    "releaseId": "solo-v1-20261115",
+    "destination": "youtube",
+    "account": "UC2ugpj3d7gewM7h4rjXDRAw",
+    "status": "published",
+    "startedAt": "2026-11-15T23:16:58.937Z",
+    "url": "https://www.youtube.com/post/UgkxIlnRpxBOX_ybKCjODeD5H2OAffgvIVet",
+    "observedAt": "2026-11-15T23:19:33.028Z"
   }
 }
