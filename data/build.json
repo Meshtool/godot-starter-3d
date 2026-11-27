@@ -1,0 +1,14 @@
+{
+  "schema": "mesh-city.build.v1",
+  "sources": {
+    "main.gd": "96e90e8a5c9db9812cfcdde83add6424871808009ff21706440df17ffe66ba07",
+    "main.tscn": "108b1ff65f2372823b12ed6b5c0c10ce7e2591b7cbc854e967151d3eee1f5c51",
+    "proof_course.gd": "ceaf82cccc45f0f882497ce7e3dc4d95d50f157eab80a50975ab16b61785bb57",
+    "proof_course.tscn": "568bd487386497fa49bc2dd21631cb7e117d07100e11268b7a433f8f2ff0891f",
+    "project.godot": "b7bdc6e36b59965341fd0ad4c57c228804f056d5c8b35fcb9ee83306cbaed00f",
+    "proof/run_model.gd": "477c73d6236bb2e5d5b6841ec0ee63f2c9d69478c25874409d767bcd2c38e9e2",
+    "proof/run_world.gd": "0edfed0cea6530f8ec5b15e6658bdc0a8a2339cb56f45c5403c251098ae2041a",
+    "data/repos.json": "5652b9d3056d755ba331d63cdfab34d1b555751049c77fbf09a414b1f5313275"
+  },
+  "id": "sha256:829a1fcccf193ef258d4d1385ce65e46cc76dd6b3e8cbb7d5478a8edf3f2df92"
+}

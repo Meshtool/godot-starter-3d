@@ -1,0 +1,16 @@
+{
+  "[\"solo-v1-20261115\",\"huggingface\",\"Meshtool/talk-to-meshtool\"]": {
+    "releaseId": "solo-v1-20261115",
+    "destination": "huggingface",
+    "account": "Meshtool/talk-to-meshtool",
+    "status": "in_flight",
+    "startedAt": "2026-11-15T22:42:03.319Z"
+  },
+  "[\"solo-v1-20261115\",\"itch\",\"Meshtool\"]": {
+    "releaseId": "solo-v1-20261115",
+    "destination": "itch",
+    "account": "Meshtool",
+    "status": "in_flight",
+    "startedAt": "2026-11-15T22:42:03.611Z"
+  }
+}

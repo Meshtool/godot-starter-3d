@@ -1,0 +1,9 @@
+Godot 4.3 stable: Web preset export passed.
+	savepack: step 96: Storing File: res://main.gd.remap
+	savepack: step 96: Storing File: res://main.tscn.remap
+	savepack: step 96: Storing File: res://proof/run_world.gd.remap
+	savepack: step 96: Storing File: res://proof/run_model.gd.remap
+	savepack: step 96: Storing File: res://.godot/global_script_class_cache.cfg
+	savepack: step 96: Storing File: res://.godot/uid_cache.bin
+	savepack: step 96: Storing File: res://project.binary
+savepack: end

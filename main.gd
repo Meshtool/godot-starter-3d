@@ -1,10 +1,13 @@
 extends Node3D
-## MESH CITY · PROOF RUN — every run, proven. A drive down the repo strip.
+## MESH CITY · GONZO RUN — a fever-dream drive down the repo strip.
 ## Ink splatter, acid neon, and a fever that climbs with every orb.
 ## Each public repo is a tower: height = size, glow = how recently it was pushed,
 ## orbs = open issues/PRs (+1 per repo). Collect every orb to sync the estate.
 ## Walk up to a tower to read its card; press E to open the repo.
 
+const UI_FONT = preload("res://assets/fonts/InterVariable.ttf")
+const RELEASE_ID := "solo-v1-20261115"
+const SOLO_TEXTURE = preload("res://assets/solo/solo-v1.png")
 const DATA_PATH := "res://data/repos.json"
 const GOLD := Color(1.0, 0.78, 0.25)
 const TURQ := Color(0.18, 0.95, 0.85)
@@ -48,6 +51,8 @@ var collected := 0
 var elapsed := 0.0
 var finished := false
 var near_repo = null
+var calm_motion := true
+var motion_button: Button
 var autopilot := "--demo" in OS.get_cmdline_user_args()
 
 var hud_title: Label
@@ -61,6 +66,7 @@ var banner: Label
 var dispatch: Label
 var dispatch_timer := 0.0
 var fever_mat: ShaderMaterial
+var fever_overlay: ColorRect
 var splats: SplatLayer
 var fever := 0.0
 
@@ -74,14 +80,16 @@ func _ready() -> void:
 	_build_city(repos)
 	_build_player()
 	_build_hud()
-	hud_data.text = "%d repos live off GitHub · data %s" % [towers.size(), _ago(data_generated)]
+	hud_data.text = "%d public repos / snapshot %s" % [towers.size(), _ago(data_generated)]
 	if week.commits > 0 or not desk.is_empty():
 		var who := []
 		for b in week.builders:
 			who.append("%s %d" % [b, int(week.builders[b])])
 		hud_effort.text = "THIS WEEK  %d commits · %d PRs merged · builders: %s" % [
 			week.commits, week.merged, ", ".join(PackedStringArray(who)) if not who.is_empty() else "—"]
-	print("=== Mesh City ready: %d towers, %d orbs ===" % [towers.size(), total_orbs])
+	print("=== SOLO ready: %d studios, %d orbs ===" % [towers.size(), total_orbs])
+	if "--smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_smoke_test")
 
 
 # ---------- setup ----------
@@ -91,6 +99,7 @@ func _setup_input() -> void:
 		"mv_left": [KEY_A, KEY_LEFT], "mv_right": [KEY_D, KEY_RIGHT],
 		"mv_fwd": [KEY_W, KEY_UP], "mv_back": [KEY_S, KEY_DOWN],
 		"mv_jump": [KEY_SPACE], "open_repo": [KEY_E, KEY_ENTER],
+		"toggle_motion": [KEY_M], "restart_run": [KEY_R],
 	}
 	for action in binds:
 		if not InputMap.has_action(action):
@@ -104,13 +113,13 @@ func _setup_input() -> void:
 func _setup_environment() -> void:
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.008, 0.0, 0.015)  # the void: almost nothing, a bruise of violet
+	env.background_color = Color(0.14, 0.24, 0.25)  # dusk at the roadside studios
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.12, 0.16, 0.2)
-	env.ambient_light_energy = 0.6
+	env.ambient_light_color = Color(0.95, 0.80, 0.62)
+	env.ambient_light_energy = 0.8
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.06, 0.01, 0.07)
-	env.fog_density = 0.028  # the edge of the city dissolves instead of ending
+	env.fog_light_color = Color(0.30, 0.29, 0.22)
+	env.fog_density = 0.006
 	env.glow_enabled = true
 	env.glow_intensity = 1.1
 	env.glow_bloom = 0.15
@@ -120,8 +129,8 @@ func _setup_environment() -> void:
 
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-55, 30, 0)
-	sun.light_color = Color(0.7, 0.85, 1.0)
-	sun.light_energy = 0.35
+	sun.light_color = Color(1.0, 0.82, 0.59)
+	sun.light_energy = 0.8
 	add_child(sun)
 
 
@@ -136,38 +145,27 @@ func _build_ground() -> void:
 	var box := BoxMesh.new()
 	box.size = shape.size
 	mesh.mesh = box
-	# the void: no floor, no grid — a still black ink sea that catches the light
-	var ink := _mat(Color(0.01, 0.005, 0.015), Color.BLACK, 0.0, 1.0)
-	ink.roughness = 0.08
-	mesh.material_override = ink
+	mesh.material_override = _mat(Color(0.40, 0.28, 0.17), Color.BLACK, 0.0, 0.0)  # baked desert hardpan
 	ground.add_child(mesh)
 	ground.position.y = -0.5
 	add_child(ground)
 
-	# drifting dust of the void: pale specks hanging in nothing
-	var dust := CPUParticles3D.new()
-	dust.amount = 500
-	dust.lifetime = 30.0
-	dust.preprocess = 30.0
-	dust.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
-	dust.emission_box_extents = Vector3(80, 30, 80)
-	dust.position.y = 32
-	dust.gravity = Vector3(0, -0.02, 0)
-	dust.initial_velocity_min = 0.0
-	dust.initial_velocity_max = 0.15
-	dust.spread = 180.0
-	var dm := SphereMesh.new()
-	dm.radius = 0.04
-	dm.height = 0.08
-	dm.material = _mat(Color(0.8, 0.85, 1.0), Color(0.8, 0.85, 1.0), 2.0, 0.0)
-	dust.mesh = dm
-	add_child(dust)
+	# grid lines: the mesh under the city
+	for i in range(-60, 61, 6):
+		for axis in 2:
+			var line := MeshInstance3D.new()
+			var lb := BoxMesh.new()
+			lb.size = Vector3(120, 0.02, 0.04) if axis == 0 else Vector3(0.04, 0.02, 120)
+			line.mesh = lb
+			line.position = Vector3(0, 0.01, i) if axis == 0 else Vector3(i, 0.01, 0)
+			line.material_override = _mat(Color(0.65, 0.46, 0.27), Color.BLACK, 0.0, 0.0)
+			add_child(line)
 
 
 func _build_lava() -> void:
 	# warm embers drifting up out of the deep — the estate's lava lamp
 	var p := CPUParticles3D.new()
-	p.amount = 260
+	p.amount = 60
 	p.lifetime = 9.0
 	p.preprocess = 9.0
 	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
@@ -311,6 +309,7 @@ func _build_effort(repo: Dictionary, pos: Vector3, height: float) -> void:
 		add_child(storm)
 		storms.append({"light": storm, "phase": randf() * 10.0})
 		var tag := Label3D.new()
+		tag.font = UI_FONT
 		tag.text = "✖ CI RED"
 		tag.font_size = 40
 		tag.pixel_size = 0.01
@@ -374,6 +373,7 @@ func _build_builders() -> void:
 			m.add_child(trail)
 			if i == 0:
 				var nm := Label3D.new()
+				nm.font = UI_FONT
 				nm.text = "%s · %d" % [b, int(week.builders[b])]
 				nm.font_size = 36
 				nm.pixel_size = 0.01
@@ -412,6 +412,7 @@ func _build_desk() -> void:
 			"stale": stale})
 		if claimed:
 			var who := Label3D.new()
+			who.font = UI_FONT
 			who.text = "%s is on it" % it.get("agent", "an agent")
 			who.font_size = 30
 			who.pixel_size = 0.01
@@ -421,6 +422,7 @@ func _build_desk() -> void:
 			who.position.y = 0.6
 			ln.add_child(who)
 	var desk_sign := Label3D.new()
+	desk_sign.font = UI_FONT
 	desk_sign.text = "DEVDESK · %d on the desk · %d being worked · %d waiting 2+ days" % [
 		int(desk.get("open", 0)), int(desk.get("claimed", 0)), int(desk.get("stale_48h", 0))]
 	desk_sign.font_size = 40
@@ -450,7 +452,7 @@ func _animate_effort(delta: float, t: float) -> void:
 	for st in storms:
 		var l: OmniLight3D = st.light
 		var flick := sin(t * 23.0 + st.phase) * sin(t * 7.0 + st.phase * 2.0)
-		l.light_energy = 0.4 + (3.5 if flick > 0.7 else 0.0)
+		l.light_energy = 0.4 + (3.5 if not calm_motion and flick > 0.7 else 0.0)
 	for m in moths:
 		var path: Array = m.path
 		m.t += delta * m.speed
@@ -475,7 +477,8 @@ func _animate_effort(delta: float, t: float) -> void:
 		var n: MeshInstance3D = ln.node
 		n.position = HEART + Vector3(cos(ln.ang) * ln.r, ln.h - HEART.y + sin(t + ln.ang) * 0.3, sin(ln.ang) * ln.r)
 		if ln.stale:
-			n.visible = fmod(t * 1.3 + ln.ang, 2.0) > 0.25
+			n.visible = true if calm_motion else fmod(t * 1.3 + ln.ang, 2.0) > 0.25
+			# n.visible = fmod(t * 1.3 + ln.ang, 2.0) > 0.25
 
 
 func _build_heart() -> void:
@@ -495,7 +498,8 @@ func _build_heart() -> void:
 	hl.position = HEART
 	add_child(hl)
 	var heart_label := Label3D.new()
-	heart_label.text = "THE RUNTIME · every receipt ends up here"
+	heart_label.font = UI_FONT
+	heart_label.text = "SIGNAL HUB / visualized repo activity"
 	heart_label.font_size = 52
 	heart_label.pixel_size = 0.01
 	heart_label.outline_size = 12
@@ -535,11 +539,12 @@ func _filament(a: Vector3, b: Vector3, color: Color, energy: float) -> void:
 
 func _district_sign(org: String, radius: float, tint: Color, ring: int) -> void:
 	var l := Label3D.new()
+	l.font = UI_FONT
 	l.text = org.to_upper()
 	l.font_size = 160
 	l.modulate = Color(tint, 0.18)
 	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	l.position = Vector3(0, 22 + ring * 6, -radius - 6)
+	l.position = Vector3(0, 10 + ring * 3, -radius - 6)
 	l.no_depth_test = false
 	add_child(l)
 
@@ -547,7 +552,7 @@ func _district_sign(org: String, radius: float, tint: Color, ring: int) -> void:
 func _build_tower(repo: Dictionary, pos: Vector3, tint: Color) -> void:
 	var days := _days_since(repo.get("pushed", ""))
 	var archived: bool = repo.get("archived", false)
-	var height := 2.5 + log(float(repo.get("size", 1)) + 1.0) * 2.2
+	var height := clampf(2.4 + log(float(repo.get("size", 1)) + 1.0) * 0.35, 2.4, 6.0)
 	var heat := clampf(1.0 - days / 21.0, 0.0, 1.0)  # fresh pushes glow hottest
 	var color := DIM if archived else tint
 
@@ -560,24 +565,24 @@ func _build_tower(repo: Dictionary, pos: Vector3, tint: Color) -> void:
 	col.position.y = height / 2.0
 	body.add_child(col)
 
-	# iron-submarine core
+	# warm stucco studio, sized by the public repo snapshot
 	var core := MeshInstance3D.new()
 	var box := BoxMesh.new()
 	box.size = shape.size
 	core.mesh = box
 	core.position.y = height / 2.0
-	core.material_override = _mat(Color(0.05, 0.05, 0.06), Color.BLACK, 0.0, 0.85)
+	core.material_override = _mat(Color(0.83, 0.67, 0.43), Color.BLACK, 0.0, 0.0)
 	body.add_child(core)
 
 	# glowing edges / floor bands — brighter the fresher the repo
-	var bands := int(height / 1.2)
+	var bands := 1
 	for b in bands:
 		var band := MeshInstance3D.new()
 		var bm := BoxMesh.new()
-		bm.size = Vector3(2.5, 0.08, 2.5)
+		bm.size = Vector3(3.0, 0.18, 3.0)
 		band.mesh = bm
-		band.position.y = 0.6 + b * 1.2
-		band.material_override = _mat(color, color, 0.4 + heat * 3.5, 0.0)
+		band.position.y = height - 0.3 + b * 0.0
+		band.material_override = _mat(color, color, 0.3 + heat * 1.2, 0.0)
 		body.add_child(band)
 
 	# beacon on top
@@ -593,6 +598,7 @@ func _build_tower(repo: Dictionary, pos: Vector3, tint: Color) -> void:
 
 	# the repo's name, big enough to read from the street
 	var label := Label3D.new()
+	label.font = UI_FONT
 	label.text = repo.get("name", "?")
 	label.font_size = 72
 	label.pixel_size = 0.01
@@ -620,6 +626,7 @@ func _build_tower(repo: Dictionary, pos: Vector3, tint: Color) -> void:
 		msg = repo.get("desc", "")
 	if msg != "":
 		var tk := Label3D.new()
+		tk.font = UI_FONT
 		tk.font_size = 52
 		tk.pixel_size = 0.01
 		tk.outline_size = 12
@@ -632,6 +639,7 @@ func _build_tower(repo: Dictionary, pos: Vector3, tint: Color) -> void:
 
 	if is_self:  # this game is a repo too — and you're standing in it
 		var crown := Label3D.new()
+		crown.font = UI_FONT
 		crown.text = "★ YOU ARE IN THIS REPO ★"
 		crown.font_size = 48
 		crown.pixel_size = 0.01
@@ -675,6 +683,7 @@ func _spawn_orb(at: Vector3, color: Color, repo: Dictionary, item) -> void:
 	if item != null:
 		orb.set_meta("item", item)
 		var tag := Label3D.new()
+		tag.font = UI_FONT
 		tag.text = "%s#%d" % ["PR " if item.get("pr", false) else "", int(item.get("n", 0))]
 		tag.font_size = 28
 		tag.pixel_size = 0.01
@@ -702,16 +711,18 @@ func _build_player() -> void:
 	col.shape = s
 	player.add_child(col)
 
-	# the estate orb: your orb is you
-	var core := MeshInstance3D.new()
-	var sm := SphereMesh.new()
-	sm.radius = 0.6
-	sm.height = 1.2
-	core.mesh = sm
-	core.material_override = _mat(TURQ, TURQ, 2.5, 0.0)
-	player.add_child(core)
+	# SOLO: the estate's original road correspondent.
+	var portrait := Sprite3D.new()
+	portrait.texture = SOLO_TEXTURE
+	portrait.pixel_size = 0.0022
+	portrait.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	portrait.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+	portrait.alpha_scissor_threshold = 0.15
+	portrait.shaded = false
+	portrait.position.y = 0.85
+	player.add_child(portrait)
 	var halo := CPUParticles3D.new()
-	halo.amount = 40
+	halo.amount = 6
 	halo.lifetime = 1.2
 	halo.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
 	halo.emission_sphere_radius = 0.9
@@ -781,10 +792,11 @@ func _process(delta: float) -> void:
 
 	fever = lerpf(fever, float(collected) / max(1.0, float(total_orbs)), delta * 1.5)
 	if fever_mat:
-		fever_mat.set_shader_parameter("fever", fever)
+		fever_mat.set_shader_parameter("fever", 0.0 if calm_motion else fever)
 		fever_mat.set_shader_parameter("t", t)
-	cam.fov = 65.0 + sin(t * 0.9) * 6.0 * fever
-	cam.rotate_object_local(Vector3.FORWARD, sin(t * 0.7) * 0.06 * fever)
+	cam.fov = 65.0 if calm_motion else 65.0 + sin(t * 0.9) * 6.0 * fever
+	if not calm_motion:
+		cam.rotate_object_local(Vector3.FORWARD, sin(t * 0.7) * 0.06 * fever)
 	if dispatch_timer > 0.0:
 		dispatch_timer -= delta
 		dispatch.modulate.a = clampf(dispatch_timer, 0.0, 1.0)
@@ -809,17 +821,22 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("toggle_motion"):
+		_toggle_motion()
+	if event.is_action_pressed("restart_run"):
+		get_tree().reload_current_scene()
 	if event.is_action_pressed("open_repo") and near_repo != null:
 		OS.shell_open(near_repo.get("url", ""))
 
 
 func _on_orb(body: Node, orb: Area3D) -> void:
-	if body != player or not is_instance_valid(orb):
+	if body != player or not is_instance_valid(orb) or not orbs.has(orb):
 		return
 	orbs.erase(orb)
 	orb.queue_free()
 	collected += 1
-	splats.splat(true)
+	if not calm_motion:
+		splats.splat(true)
 	var repo_name: String = orb.get_meta("repo", "the strip")
 	if orb.has_meta("item"):
 		var it: Dictionary = orb.get_meta("item")
@@ -829,9 +846,9 @@ func _on_orb(body: Node, orb: Area3D) -> void:
 		_say(DISPATCHES[randi() % DISPATCHES.size()].replace("{repo}", repo_name))
 	if collected >= total_orbs and not finished:
 		finished = true
-		banner.text = "ESTATE SYNCED. THE FEVER BROKE.  %.1fs" % elapsed
+		banner.text = "RUN COMPLETE.  %.1fs\nR TO RIDE AGAIN" % elapsed
 		banner.visible = true
-		print("=== ESTATE SYNCED in %.1fs ===" % elapsed)
+		print("=== SOLO RUN COMPLETE in %.1fs ===" % elapsed)
 
 
 # ---------- HUD ----------
@@ -840,7 +857,7 @@ func _build_hud() -> void:
 	var ui := CanvasLayer.new()
 	add_child(ui)
 
-	hud_title = _label("MESH CITY · PROOF RUN", 28, GOLD)
+	hud_title = _label("SOLO / MESH CITY", 28, GOLD)
 	hud_title.position = Vector2(20, 14)
 	ui.add_child(hud_title)
 	hud_count = _label("", 20, TURQ)
@@ -855,7 +872,7 @@ func _build_hud() -> void:
 	hud_effort = _label("", 14, Color(1.0, 0.8, 0.55))
 	hud_effort.position = Vector2(20, 124)
 	ui.add_child(hud_effort)
-	var help := _label("WASD move · SPACE jump · E open repo", 14, Color(0.6, 0.65, 0.7))
+	var help := _label("WASD / arrows: move  |  SPACE: jump  |  E: repo  |  M: motion  |  R: restart", 14, Color(1.0, 0.94, 0.80))
 	help.anchor_top = 1.0
 	help.anchor_bottom = 1.0
 	help.position = Vector2(20, -30)
@@ -897,7 +914,7 @@ func _build_hud() -> void:
 	dispatch.autowrap_mode = TextServer.AUTOWRAP_WORD
 	ui.add_child(dispatch)
 
-	banner = _label("", 44, GOLD)
+	banner = _label("", 32, GOLD)
 	banner.set_anchors_preset(Control.PRESET_CENTER)
 	banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	banner.offset_left = -400
@@ -911,6 +928,8 @@ func _build_hud() -> void:
 	add_child(fx)
 	ui.layer = 1
 	var rect := ColorRect.new()
+	fever_overlay = rect
+	rect.visible = not calm_motion
 	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var sh := Shader.new()
@@ -923,9 +942,24 @@ func _build_hud() -> void:
 	splats.set_anchors_preset(Control.PRESET_FULL_RECT)
 	splats.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	fx.add_child(splats)
-	for i in 5:
-		splats.splat(false)  # the page is never clean
-	_say("Dispatch #1: Woke up inside my own repo. Rolled onto the strip at dawn. The towers were humming. Something in the build pipeline was watching me.")
+	splats.visible = not calm_motion
+	motion_button = Button.new()
+	motion_button.text = "Motion: calm [M]"
+	motion_button.position = Vector2(20, 150)
+	motion_button.pressed.connect(_toggle_motion)
+	motion_button.add_theme_font_override("font", UI_FONT)
+	ui.add_child(motion_button)
+	var course_button := Button.new()
+	course_button.name = "ProofCourseButton"
+	course_button.text = "Solo's Proof Course"
+	course_button.add_theme_font_override("font", UI_FONT)
+	course_button.position = Vector2(20, 192)
+	course_button.custom_minimum_size = Vector2(210, 40)
+	course_button.tooltip_text = "Leave this city run and open the recorded flight course."
+	course_button.pressed.connect(func():
+		get_tree().change_scene_to_file("res://proof_course.tscn"))
+	ui.add_child(course_button)
+	_say("SOLO, reporting from the repo strip. Collect the signals. Find the stories. Bring back receipts.")
 
 
 func _update_card() -> void:
@@ -976,6 +1010,7 @@ func _update_card() -> void:
 func _label(text: String, size: int, color: Color) -> Label:
 	var l := Label.new()
 	l.text = text
+	l.add_theme_font_override("font", UI_FONT)
 	l.add_theme_font_size_override("font_size", size)
 	l.add_theme_color_override("font_color", color)
 	l.add_theme_color_override("font_outline_color", Color.BLACK)
@@ -1107,3 +1142,45 @@ class SplatLayer extends Control:
 			for dr in it.drips:
 				draw_line(dr[0], dr[0] + Vector2(0, dr[1]), c, dr[2])
 				draw_circle(dr[0] + Vector2(0, dr[1]), dr[2] * 0.9, c)
+
+
+func _toggle_motion() -> void:
+	calm_motion = not calm_motion
+	splats.visible = not calm_motion
+	fever_overlay.visible = not calm_motion
+	motion_button.text = "Motion: calm [M]" if calm_motion else "Motion: gonzo [M]"
+
+
+# Synthetic state checks only; not a signed or human gameplay receipt.
+func _smoke_test() -> void:
+	var errors: Array[String] = []
+	if towers.is_empty() or total_orbs <= 0:
+		errors.append("public repo snapshot did not create a playable world")
+	if not SOLO_TEXTURE or SOLO_TEXTURE.get_width() <= 0:
+		errors.append("character texture is missing")
+	if errors.is_empty():
+		var first: Area3D = orbs[0]
+		_on_orb(self, first)
+		if collected != 0:
+			errors.append("non-player collected an orb")
+		_on_orb(player, first)
+		_on_orb(player, first)
+		if collected != 1:
+			errors.append("duplicate collision counted twice")
+		for orb in orbs.duplicate():
+			_on_orb(player, orb)
+		if collected != total_orbs or not finished or not banner.visible:
+			errors.append("complete run did not reach completion")
+		if not calm_motion or fever_overlay.visible or splats.visible:
+			errors.append("calm motion must hide distortion and splats by default")
+		_toggle_motion()
+		if calm_motion or not splats.visible or not fever_overlay.visible:
+			errors.append("motion toggle failed")
+		_toggle_motion()
+	if not errors.is_empty():
+		for error in errors:
+			push_error(error)
+		get_tree().quit(1)
+		return
+	print("SOLO_SMOKE_PASS: texture, world, player-only collection, duplicate guard, completion, calm motion")
+	get_tree().quit(0)

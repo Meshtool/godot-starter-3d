@@ -1,0 +1,15 @@
+test_algorithm_rejected (test_meshtag.TagTests.test_algorithm_rejected) ... ok
+test_attacker_cannot_replace_key_and_resign (test_meshtag.TagTests.test_attacker_cannot_replace_key_and_resign) ... ok
+test_changed_receipt (test_meshtag.TagTests.test_changed_receipt) ... ok
+test_demo_key_cannot_sign_real_run (test_meshtag.TagTests.test_demo_key_cannot_sign_real_run) ... ok
+test_embedded_key_does_not_establish_trust (test_meshtag.TagTests.test_embedded_key_does_not_establish_trust) ... ok
+test_invalid_cli_exits_nonzero (test_meshtag.TagTests.test_invalid_cli_exits_nonzero) ... ok
+test_rehashed_tampering_still_fails_signature (test_meshtag.TagTests.test_rehashed_tampering_still_fails_signature) ... ok
+test_sample_needs_opt_in (test_meshtag.TagTests.test_sample_needs_opt_in) ... ok
+test_shipped_sample_is_not_live_proof (test_meshtag.TagTests.test_shipped_sample_is_not_live_proof) ... ok
+test_trusted_signature (test_meshtag.TagTests.test_trusted_signature) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.147s
+
+OK
